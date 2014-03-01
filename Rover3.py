@@ -69,7 +69,3 @@ class Rover3():
 			time_tuple = (self.year,self.month,self.day,self.hour,self.minute,self.second,self.milisecond)
 			self.time_ = ('Year:'+str(self.year)+' Month:'+str(self.month)+' Day:'+str(self.day)+' Hour:'+str(self.hour)+' Minute:'+str(self.minute)+' Second:'+str(self.second))
 			#_linux_set_time(time_tuple)
-TIME = Rover3()
-TIME.data = 'TIME 2014-03-1 16:27:00:000'
-TIME.parse()
-print(TIME.time_)
