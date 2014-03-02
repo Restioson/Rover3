@@ -23,8 +23,10 @@ class Rover3():
 		string = self.data
 		string = string.split()
 		self.tag = string.pop(0)
-		string = ''+string[0]+' '+string[1]
-		
+		try:
+			string = ''+string[0]+' '+string[1]
+		except:
+			string = ''+string[0]
 		if self.tag == 'GPS':
 			string = string.replace(',',' ')
 			string = string.split()
