@@ -3,13 +3,25 @@ import serial
 import time
 import thread
 import sys
+import utils
 
-ser = serial.Serial('/dev/ttyAMA0',57600,timeout=1.5)
-ser.readline()
-state = 'ON'
-gps = Rover3.Rover3()
+try:
+	port = sys.argv[1]
+except:
+	port = '/dev/ttyAMA0'
+
+ser = serial.Serial(port, 57600, timeout=1.5) #Create a serial object
+ser.readline() #Let the protocol handshake...
+
+state = 'ON' #State of the mainloop
+
+gps = Rover3.Rover3() #Make an instance of the 'Rover3' class for getting the GPS readings
+timegps = Rover3.Rover3() #Make an instance of the 'Rover3' class for getting the GPS time readings
+evrion = Rover3.Rover3() #Make an instance of the 'Rover3' class for getting the environment info (NOT YET IMPLEMENTED ON THE ARDUINO SIDE)
+
+
 f = ''
-def check():
+def update():
 	try:
 		while True:
 			rdln = ser.readline()
@@ -43,5 +55,3 @@ def mainloop():
 			f.close()
 			break
 			ser.close()
-thread.start_new_thread(check,())
-mainloop()
