@@ -28,3 +28,4 @@ def exec_cmd(cmd):
 	
 def dyn_cmd(cmd):
 	exec(cmd)
+	

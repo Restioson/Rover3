@@ -1,9 +1,11 @@
 import Rover3
 import serial
 import time
+import datetime
+import os
 import thread
 import sys
-import utils
+import utils #Unimplemented!
 
 try:
 	port = sys.argv[1]
@@ -15,9 +17,7 @@ ser.readline() #Let the protocol handshake...
 
 state = 'ON' #State of the mainloop
 
-gps = Rover3.Rover3() #Make an instance of the 'Rover3' class for getting the GPS readings
-timegps = Rover3.Rover3() #Make an instance of the 'Rover3' class for getting the GPS time readings
-evrion = Rover3.Rover3() #Make an instance of the 'Rover3' class for getting the environment info (NOT YET IMPLEMENTED ON THE ARDUINO SIDE)
+Rover3 = Rover3.Rover3() #Make an instance of the 'Rover3' class
 
 
 f = ''
@@ -26,8 +26,13 @@ def update():
 		while True:
 			rdln = ser.readline()
 			if rdln != 'BREAK serial':
-				gps.data = rdln
-				gps.parse()
+				if rdln != 'REC start' or rdln != 'REC end':
+					Rover3.data = rdln
+					Rover3.parse()
+				if rdln == 'REC start':
+					os.system('sudo raspivid -vf -n -o video.h264')
+				if rdln == 'REC stop':
+					os.system('sudo killall raspivid')
 			if rdln == 'BREAK serial':
 				state == 'OFF'
 				ser.write('BREAK serial confirm')
@@ -36,21 +41,21 @@ def update():
 		f.close()
 		ser.close()		
 def mainloop():
-	f = open('RoverMission.log','ab')
+	f = open(os.getcwd()+'/log/'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'), 'w')
 	while state=='ON':
 		try:
 			time.sleep(10)	
-			f.write('Latitude: '+gps.latitude)
-			f.write(' Longitude: '+gps.longitude)
-			f.write(' Course: '+gps.course)
-			f.write(' Speed: '+gps.speed)
-			f.write(' Heading: '+gps.heading)
+			f.write('Latitude: '+Rover3.latitude)
+			f.write(' Longitude: '+Rover3.longitude)
+			f.write(' Course: '+Rover3.course)
+			f.write(' Speed: '+Rover3.speed)
+			f.write(' Heading: '+Rover3.heading)
 			f.write('\n')
-			print('Latitude:'+gps.latitude)
-			print('Longitude:'+gps.longitude)
-			print('Course:'+gps.course)
-			print('Speed:'+gps.speed)
-			print('Heading:'+gps.heading)
+			print('Latitude:'+Rover3.latitude)
+			print('Longitude:'+Rover3.longitude)
+			print('Course:'+Rover3.course)
+			print('Speed:'+Rover3.speed)
+			print('Heading:'+Rover3.heading)
 		except KeyboardInterrupt:
 			f.close()
 			break
