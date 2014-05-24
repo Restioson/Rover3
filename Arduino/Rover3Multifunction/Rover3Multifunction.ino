@@ -127,6 +127,11 @@ boolean sonar_range = false;
 
 int forward_speed = 0;
 
+// Slowdown and stopping distances
+int distance_stop = 50;
+int distance_slowdown = 150;
+int speed_slow = 60;
+
 // This is where you declare prototypes for the functions that will be 
 // using the TinyGPS library.
 void getgps(TinyGPS &gps);
@@ -207,7 +212,7 @@ void loop ()
       
       fwd_range_cm = getForwardRangeCm();
 
-      if ((fwd_range_cm <= 30) && (forward_speed == 0)) {
+      if ((fwd_range_cm <= distance_stop) && (forward_speed == 0)) {
           Serial.println("Object closer than 40cm!");
           Serial.print("Speed: ");
           Serial.println(forward_speed);
@@ -216,7 +221,7 @@ void loop ()
           tone(SPEAKER_PIN, NOTE_B3, 10);
       } else
 
-      if ((fwd_range_cm <= 30) && (forward_speed > 0)) {
+      if ((fwd_range_cm <= distance_stop) && (forward_speed > 0)) {
           Serial.println("Too close - STOPPING!");
           Serial.print("Speed: ");
           Serial.println(forward_speed);
@@ -226,7 +231,7 @@ void loop ()
           stopMotors();
       } else
       
-      if ((fwd_range_cm >= 100) && (forward_speed < 255) && (forward_speed > 0)) {
+      if ((fwd_range_cm >= distance_slowdown) && (forward_speed < 255) && (forward_speed > 0)) {
           forward_speed = 255;
           goForward(forward_speed);
           Serial.println("No obstacles - SPEEDING UP!");
@@ -239,8 +244,8 @@ void loop ()
       
       else 
     
-      if ((fwd_range_cm > 30) && (fwd_range_cm < 100) && (forward_speed > 80)) { 
-          forward_speed = 80;
+      if ((fwd_range_cm > distance_stop) && (fwd_range_cm < distance_slowdown) && (forward_speed > speed_slow )) { 
+          forward_speed = speed_slow;
           goForward(forward_speed);
           tone(SPEAKER_PIN, NOTE_C8, 10);
           Serial.println("Close to obstacle - SLOWING down!");
