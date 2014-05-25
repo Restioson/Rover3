@@ -23,6 +23,7 @@ f = ''
 def update():
 	try:
 		rdln = ser.readline()
+		rdln2 = ser.readline()
 		if rdln == 'BREAK serial':
 			state == 'OFF'
 			ser.write('BREAK serial confirm')
@@ -30,6 +31,8 @@ def update():
 			sys.exit(0)
 		else:
 			Rover.data = rdln
+			Rover.parse()
+			Rover.data = rdln2
 			Rover.parse()
 	except KeyboardInterrupt:
 		f.close()
