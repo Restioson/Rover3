@@ -25,8 +25,8 @@ class Rover3():
 		self.temperature = ''
 		self.pitch = ''
 		self.roll = ''
-		self.humidity
-		self.objdistfront
+		self.humidity = ''
+		self.objdistfront = 0
 		
 	def parse(self):
 		string = self.data
