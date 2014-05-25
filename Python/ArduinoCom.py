@@ -39,7 +39,11 @@ def update():
 		print('Ending (got KeyboardInterrupt)...')
 		sys.exit(0)
 def mainloop():
-	f = open(os.getcwd()+'/log/'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'), 'w')
+	try:
+		f = open(os.getcwd()+'/log/'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'), 'w')
+	except IOError:
+		os.system('mkdir ./log/')
+		f = open(os.getcwd()+'/log/'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'), 'w')
 	while state=='ON':
 		try:
 			time.sleep(10)	
