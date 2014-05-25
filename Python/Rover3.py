@@ -18,7 +18,6 @@ class Rover3():
 		self.hour = ''
 		self.minute = ''
 		self.second = ''
-		self.millisecond = ''
 		self.time_ = '' 
 		self.time = ''
 		##Environment
@@ -59,8 +58,7 @@ class Rover3():
 			self.hour = int(string.pop(0))	#Hour, eg. 24
 			self.minute = int(string.pop(0))#Minutes ,pretty self-explanatory
 			self.second = int(string.pop(0))#Seconds...you MUST know this one!
-			self.millisecond = int(string.pop(0))#Milliseconds!
-			time_tuple = (self.year,self.month,self.day,self.hour,self.minute,self.second,self.millisecond)#A tuple of all the times!
+			time_tuple = (self.year,self.month,self.day,self.hour,self.minute,self.second)#A tuple of all the times!
 			self.time_ = ('Year:'+str(self.year)+' Month:'+str(self.month)+' Day:'+str(self.day)+' Hour:'+str(self.hour)+' Minute:'+str(self.minute)+' Second:'+str(self.second))#A string time...
 		
 		if self.tag == "ENVIRON":
