@@ -5,7 +5,7 @@ import datetime
 import os
 import thread
 import sys
-
+print('Starting...')
 try:
 	port = sys.argv[1]
 except:
@@ -31,10 +31,13 @@ def update():
 			if rdln == 'BREAK serial':
 				state == 'OFF'
 				ser.write('BREAK serial confirm')
-				sys.exit()
+				print('Ending (got "BREAK serial")...')
+				sys.exit(0)
 	except KeyboardInterrupt:
 		f.close()
-		ser.close()		
+		ser.close()
+		print('Ending (got KeyboardInterrupt)...')
+		sys.exit(0)
 def mainloop():
 	f = open(os.getcwd()+'/log/'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'), 'w')
 	while state=='ON':
@@ -55,5 +58,7 @@ def mainloop():
 			print('Raw Data:'+Rover.data)
 		except KeyboardInterrupt:
 			f.close()
-			break
 			ser.close()
+			print('Ending (got KeyboardInterrupt)...')
+			sys.exit(0)
+			
