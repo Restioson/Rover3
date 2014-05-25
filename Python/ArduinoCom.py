@@ -67,3 +67,4 @@ def mainloop():
 			sys.exit(0)
 		
 mainloop()
+thread.start_new_thread(update,())
