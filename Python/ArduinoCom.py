@@ -48,7 +48,6 @@ def mainloop():
 	while state=='ON':
 		try:
 			update()
-			time.sleep(10)
 			f.write(' Time: '+'Year:'+str(Rover.year)+' Month:'+str(Rover.month)+' Day:'+str(Rover.day)+' Hour:'+str(Rover.hour)+' Minute:'+str(Rover.minute)+' Second:'+str(Rover.second))
 			f.write(' Latitude: '+Rover.latitude)
 			f.write(' Longitude: '+Rover.longitude)
