@@ -25,9 +25,8 @@ def update():
 		while True:
 			rdln = ser.readline()
 			if rdln != 'BREAK serial':
-				if rdln != 'REC start' or rdln != 'REC end':
-					Rover.data = rdln
-					Rover.parse()
+				Rover.data = rdln
+				Rover.parse()
 			if rdln == 'BREAK serial':
 				state == 'OFF'
 				ser.write('BREAK serial confirm')
