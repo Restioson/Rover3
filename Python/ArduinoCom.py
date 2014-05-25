@@ -22,16 +22,15 @@ Rover = Rover3.Rover3() #Make an instance of the 'Rover' class
 f = ''
 def update():
 	try:
-		while True:
-			rdln = ser.readline()
-			if rdln != 'BREAK serial':
-				Rover.data = rdln
-				Rover.parse()
-			if rdln == 'BREAK serial':
-				state == 'OFF'
-				ser.write('BREAK serial confirm')
-				print('Ending (got "BREAK serial")...')
-				sys.exit(0)
+		rdln = ser.readline()
+		if rdln == 'BREAK serial':
+			state == 'OFF'
+			ser.write('BREAK serial confirm')
+			print('Ending (got "BREAK serial")...')
+			sys.exit(0)
+		else:
+			Rover.data = rdln
+			Rover.parse()
 	except KeyboardInterrupt:
 		f.close()
 		ser.close()
@@ -45,6 +44,7 @@ def mainloop():
 		f = open(os.getcwd()+'/log/'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'), 'w')
 	while state=='ON':
 		try:
+			update()
 			time.sleep(10)	
 			f.write(' Latitude: '+Rover.latitude)
 			f.write(' Longitude: '+Rover.longitude)
@@ -66,4 +66,3 @@ def mainloop():
 			sys.exit(0)
 		
 mainloop()
-thread.start_new_thread(update,())
