@@ -5,7 +5,6 @@ import datetime
 import os
 import thread
 import sys
-import utils #Unimplemented!
 
 try:
 	port = sys.argv[1]
