@@ -17,7 +17,7 @@ ser.readline() #Let the protocol handshake...
 
 state = 'ON' #State of the mainloop
 
-Rover3 = Rover3.Rover3() #Make an instance of the 'Rover3' class
+Rover = Rover3.Rover3() #Make an instance of the 'Rover' class
 
 
 f = ''
@@ -27,12 +27,8 @@ def update():
 			rdln = ser.readline()
 			if rdln != 'BREAK serial':
 				if rdln != 'REC start' or rdln != 'REC end':
-					Rover3.data = rdln
-					Rover3.parse()
-				if rdln == 'REC start':
-					os.system('sudo raspivid -vf -n -o video.h264')
-				if rdln == 'REC stop':
-					os.system('sudo killall raspivid')
+					Rover.data = rdln
+					Rover.parse()
 			if rdln == 'BREAK serial':
 				state == 'OFF'
 				ser.write('BREAK serial confirm')
@@ -45,17 +41,19 @@ def mainloop():
 	while state=='ON':
 		try:
 			time.sleep(10)	
-			f.write('Latitude: '+Rover3.latitude)
-			f.write(' Longitude: '+Rover3.longitude)
-			f.write(' Course: '+Rover3.course)
-			f.write(' Speed: '+Rover3.speed)
-			f.write(' Heading: '+Rover3.heading)
+			f.write(' Latitude: '+Rover.latitude)
+			f.write(' Longitude: '+Rover.longitude)
+			f.write(' Course: '+Rover.course)
+			f.write(' Speed: '+Rover.speed)
+			f.write(' Heading: '+Rover.heading)
+			f.write(' Raw Data: '+Rover.data)
 			f.write('\n')
-			print('Latitude:'+Rover3.latitude)
-			print('Longitude:'+Rover3.longitude)
-			print('Course:'+Rover3.course)
-			print('Speed:'+Rover3.speed)
-			print('Heading:'+Rover3.heading)
+			print('Latitude:'+Rover.latitude)
+			print('Longitude:'+Rover.longitude)
+			print('Course:'+Rover.course)
+			print('Speed:'+Rover.speed)
+			print('Heading:'+Rover.heading)
+			print('Raw Data:'+Rover.data)
 		except KeyboardInterrupt:
 			f.close()
 			break
