@@ -61,4 +61,5 @@ def mainloop():
 			ser.close()
 			print('Ending (got KeyboardInterrupt)...')
 			sys.exit(0)
-			
+		
+mainloop()
