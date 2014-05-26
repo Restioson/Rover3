@@ -41,7 +41,7 @@ def update():
 		sys.exit(0)
 def mainloop():
 	try:
-		f = open(os.getcwd()+'/log/'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'), 'w')
+		f = open('/home/pi/log/'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'), 'w')
 	except IOError:
 		os.system('mkdir ./log/')
 		f = open(os.getcwd()+'/log/'+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'), 'w')
@@ -56,14 +56,8 @@ def mainloop():
 			f.write(' Heading: '+Rover.heading)
 			f.write(' Raw Data: '+Rover.data)
 			f.write('\n')
+			f.flush()
 
-			print(' Time: '+'Year:'+str(Rover.year)+' Month:'+str(Rover.month)+' Day:'+str(Rover.day)+' Hour:'+str(Rover.hour)+' Minute:'+str(Rover.minute)+' Second:'+str(Rover.second))
-			print('Latitude:'+Rover.latitude)
-			print('Longitude:'+Rover.longitude)
-			print('Course:'+Rover.course)
-			print('Speed:'+Rover.speed)
-			print('Heading:'+Rover.heading)
-			print('Raw Data:'+Rover.data)
 		except KeyboardInterrupt:
 			f.close()
 			ser.close()

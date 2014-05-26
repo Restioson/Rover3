@@ -26,6 +26,7 @@ class Rover3():
 		self.roll = ''
 		self.humidity = ''
 		self.objdistfront = 0
+		self.objdistback = 0
 		
 	def parse(self):
 		string = self.data
@@ -39,13 +40,13 @@ class Rover3():
 			#Parse the GPS readings
 			string = string.replace(',',' ')
 			string = string.split()
+			self.latitude = string.pop(0)
 			#Record the values
-			self.latitude = string.pop(0) #Latitude, positive = 
 			self.longitude = string.pop(0)
 			self.course = string.pop(0)
 			self.speed = string.pop(0)
 			self.heading = string.pop(0)
-		
+			#Lat,long,course,speed,heading
 		if self.tag == 'TIME':
 			#Parse the input
 			string = string.replace(':',' ')
@@ -69,7 +70,8 @@ class Rover3():
 			self.pitch = string[2]
 			self.roll = string[3]
 			self.objdistfront = string[4]
-			
+			self.objdistback = string[5]
+			#EG: temperature humidity pitch roll rangeFwd rangeBck
 		if self.tag == "LOG":
 			#Parse the log data
 			self.log = self.log + string
