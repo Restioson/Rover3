@@ -80,10 +80,6 @@ void loop ()
   int y = analogRead(yPin);
 
   // Output the values
-  Serial.print("Joystick x: ");
-  Serial.print(x);
-  Serial.print(" | y: ");
-  Serial.println(y);
   
   // Forward: 25 < x < 70
   // Backwards: 300 < x < 350
@@ -154,27 +150,22 @@ void loop ()
      switch (newDirection) {
      
        case FORWARD:
-            Serial.println("Go forward!");
             sendCommand('W');
             break;
           
        case BACK:  
-            Serial.println("Go back!"); 
             sendCommand('S');
             break;
 
        case LEFT:
-            Serial.println("Go left!"); 
             sendCommand('A');
             break;
             
        case RIGHT:
-            Serial.println("Go right!"); 
             sendCommand('D');
             break;
      
        case STOP:
-            Serial.println("STOP!"); 
             sendCommand(' ');
             break;
             
@@ -194,9 +185,6 @@ void sendCommand(char cmd)
 {
   
   payload[0] = cmd;
-  Serial.print("Sending cmd: [");
-  Serial.print(cmd);
-  Serial.println("]");
   
   // 16-bit addressing: Enter address of remote XBee, typically the coordinator
   Tx16Request tx = Tx16Request(ROVER_XBEE_ADDR, payload, sizeof(payload));
@@ -215,19 +203,18 @@ void sendCommand(char cmd)
     	   // get the delivery status, the fifth byte
            if (txStatus.getStatus() == SUCCESS) {
             	// success.  time to celebrate
-                Serial.println("success!");
            } else {
             	// the remote XBee did not receive our packet. is it powered on?
-               Serial.println("did not receive packet");
+               Serial.println("Did not receive packet");
            }
         }      
       } else if (xbee.getResponse().isError()) {
-        Serial.print("error reading packet.  Error code: ");  
+        Serial.print("Error reading packet.  Error code: ");  
         Serial.println(xbee.getResponse().getErrorCode());
         // or flash error led
       } else {
         // local XBee did not provide a timely TX Status   Radio is not configured properly or connected
-        Serial.println("unknown error");
+        Serial.println("Unknown XBEE Error");
       }
 
   
