@@ -27,9 +27,15 @@
 // FlyCam
 #define FLYCAM_PWM_PIN       44
 
-// Ultrasonic Range Finder
+// Ultrasonic Range Finder (forward-facing)
 #define MAXSONAR_ACTIVE_PIN  43
 #define MAXSONAR_PWM_PIN     45
+
+// Infrared range sensor (rear-racing)
+#define IR_RANGE_PIN         15
+
+float ir_sensor_value = 0;
+float rear_range_cm = 0;
 
 boolean debug = false;
 
@@ -126,10 +132,12 @@ int errorLed = 5;
 boolean sonar_range = false;
 
 int forward_speed = 0;
+int back_speed = 0;
 
 // Slowdown and stopping distances
 int distance_stop = 50;
 int distance_slowdown = 150;
+int distance_rear_slowdown = 75;
 int speed_slow = 60;
 
 // This is where you declare prototypes for the functions that will be 
@@ -222,7 +230,7 @@ void loop ()
       } else
 
       if ((fwd_range_cm <= distance_stop) && (forward_speed > 0)) {
-          Serial.println("Too close - STOPPING!");
+          Serial.println("Too close, forward obstacle - STOPPING!");
           Serial.print("Speed: ");
           Serial.println(forward_speed);
           Serial.print("Range: ");
@@ -234,7 +242,7 @@ void loop ()
       if ((fwd_range_cm >= distance_slowdown) && (forward_speed < 255) && (forward_speed > 0)) {
           forward_speed = 255;
           goForward(forward_speed);
-          Serial.println("No obstacles - SPEEDING UP!");
+          Serial.println("No forward obstacles - SPEEDING UP!");
           Serial.print("Speed: ");
           Serial.println(forward_speed);
           Serial.print("Range: ");
@@ -248,7 +256,7 @@ void loop ()
           forward_speed = speed_slow;
           goForward(forward_speed);
           tone(SPEAKER_PIN, NOTE_C8, 10);
-          Serial.println("Close to obstacle - SLOWING down!");
+          Serial.println("Close to forward obstacle - SLOWING down!");
           Serial.print("Speed: ");
           Serial.println(forward_speed);
           Serial.print("Range: ");
@@ -256,7 +264,32 @@ void loop ()
       } 
 
   }
-    
+   
+ // Rear IR sensor
+  ir_sensor_value = analogRead(IR_RANGE_PIN);
+  rear_range_cm = 10650.08 * pow(ir_sensor_value,-0.935) - 10;
+ 
+  if ((back_speed > 0) && (rear_range_cm < distance_stop)) {
+          Serial.println("Too close, rear obstacle - STOPPING!");
+          Serial.print("Speed: ");
+          Serial.println(back_speed);
+          Serial.print("Range: ");
+          Serial.println(rear_range_cm);
+          tone(SPEAKER_PIN, NOTE_G3, 10);
+          stopMotors();
+  }
+  
+  if ((back_speed > speed_slow) && (rear_range_cm >= distance_stop) && (rear_range_cm < distance_rear_slowdown)) {
+          Serial.println("Too close, rear obstacle - slowing down!");
+          Serial.print("Speed: ");
+          Serial.println(back_speed);
+          Serial.print("Range: ");
+          Serial.println(rear_range_cm);
+          tone(SPEAKER_PIN, NOTE_G3, 10);
+          goBack(speed_slow);
+  }
+
+
   // Temperature and Humidity 
   if (debug) Serial.println("Reading temperature");
   readTemperature();
@@ -336,14 +369,18 @@ void loop ()
       switch (data) {
         
       case 'W' :
-              if (forward_speed == 0) {
+              if ((forward_speed == 0) && (fwd_range_cm > distance_stop)) {
                   forward_speed = 255;
               }
               goForward(forward_speed);
               break;
       
       case 'S' : 
-              goBack(200);
+              if (rear_range_cm > distance_stop) {
+                  goBack(150);
+              } else {
+                  Serial.println("Too close - ignoring move back command");
+              }
               break;
      
       case 'A' :   
@@ -432,13 +469,14 @@ void goBack(int power)
  
   stopMotors();
   
-  
   Serial.print("Backwards ");
   Serial.print(power);
   Serial.print(" ...\n"); 
 
   motorGo(0, CCW, power);
   motorGo(1, CCW, power);
+  
+  back_speed = power;
   
 }
 
@@ -448,6 +486,7 @@ void stopMotors()
   motorOff(1);
   
   forward_speed = 0;
+  back_speed = 0;
   
   // Switch off the sonar range finder
   
@@ -770,7 +809,7 @@ void writeStatus() {
   
   // Here you can print the altitude and course values directly since 
   // there is only one value for the function
-  Serial.print("Altitude (meters): "); Serial.print(gps.f_altitude());  
+  Serial.print("Altitude (m): "); Serial.print(gps.f_altitude());  
   Serial.print("  ");
   // Same goes for course
   Serial.print("Course (degrees): "); Serial.print(gps.f_course()); 
@@ -779,9 +818,13 @@ void writeStatus() {
   // And same goes for speed
   Serial.print("Speed(kmph): "); Serial.print(gps.f_speed_kmph());
   
-    // Range Finder
-    Serial.print(" Range=");
+    // Range Finder, URF Front
+    Serial.print(" Fwd_Range=");
     Serial.print(fwd_range_cm);
+        
+    // Range Finder, IR Rear
+    Serial.print(" Rear_Range=");
+    Serial.print(rear_range_cm);
         
     // Compass
      Serial.print(" Heading=");             // Print the sensor readings to the serial port.
@@ -800,7 +843,7 @@ void writeStatus() {
     Serial.print(humidity_dht22);
 
     // Motor speed
-    Serial.print(" Forward_speed=");
+    Serial.print(" Fwd_speed=");
     Serial.print(forward_speed);
 
     // Time
@@ -808,6 +851,8 @@ void writeStatus() {
     sprintf(timeStr, "%02d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minutes, second);
     Serial.print(" Time=");
     Serial.println(timeStr);
+
+    // *****************
 
     // Rasperry Pi Serial
     Serial1.print("GPS ");
