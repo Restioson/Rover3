@@ -6,10 +6,10 @@ import pygame
 import thread
 import time
 print('Starting...')
-print("Sometimes the ports get wacky! Mine is COM8!")
-port = int(input('Port > '))-1
+port = 8
+
 pygame.init()
-ser = serial.Serial(port, 115200, timeout=1.5) #Create a serial object
+ser = serial.Serial(int(port)-1, 115200, timeout=1.5) #Create a serial object
 ser.readline() #Let the protocol handshake...
 screen = pygame.display.set_mode((640,480))
 pygame.display.set_caption('Rover Controller')
@@ -26,30 +26,30 @@ thread.start_new_thread(alive,('a','b'))
 thread.start_new_thread(read,('a','b'))
 myfont = pygame.font.SysFont("monospace", 15)
 text = ''
-label = myfont.render(text, 12, (0,0,0))
-screen.blit(label, (0, 0))
+surface = pygame.Surface((640,420))
+surface.fill((0,0,0))
 lastcmd = ''
 while True: 
         for event in pygame.event.get(): #Event loop
             keyinput = pygame.key.get_pressed()
 
             if keyinput[pygame.K_UP]:
-                ser.write('u')
+                ser.write('U')
                 print('forward')
                 lastcmd = 'm'
                  
             if keyinput[pygame.K_DOWN]:
-                ser.write('d')
+                ser.write('D')
                 print('back')
                 lastcmd = 'm'
                 
             if keyinput[pygame.K_LEFT]:
-                ser.write('l')
+                ser.write('L')
                 print('left')
                 lastcmd = 'm'
                 
             if keyinput[pygame.K_RIGHT]:
-                ser.write('r')
+                ser.write('R')
                 print('right')
                 lastcmd = 'm'
                 
@@ -70,9 +70,8 @@ while True:
                 lastcmd = 'e'
                 
             end = False
-
-        screen.blit(myfont.render(text, 12, (0,0,0)), (0, 0))
-        print(text)
+        screen.blit(surface,(0,0))
+        screen.blit(myfont.render(text, 12, (255,255,255)), (0, 0))
         pygame.display.flip()
 
                 
