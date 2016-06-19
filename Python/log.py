@@ -15,7 +15,20 @@ class Logger():
         self.closed = False
         
         #Create filename
-        self.filename = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log')
+        
+        #List files in directory
+        
+        #Highest log file number
+        highest = 1
+        
+        #Find highest log file number
+        for filename in os.listdir(directory):  
+             #Taken from "tinyurl.com/numberInString", fmark's answer
+            if [int(character) for character in filename.split() if character.isdigit()][0] > highest:
+                highest = [int(character) for character in filename.split() if character.isdigit()][0]            
+        
+        #Set filename
+        self.filename = datetime.datetime.now().strftime('{0}.log.gz'.format(str(highest+1)))
     
         #Create file path
         self.filepath = os.path.join(directory, filename)
