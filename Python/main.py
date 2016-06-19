@@ -28,10 +28,10 @@ class Main():
             data = self.serial.parse()
             
             #Create message format
-            logmessageFormat = "Latitude: {0}\nLongitude: {1}\nAltitude: {2} Course: {3}\nHeading: {4}\nSpeed: {5}\nTemperature: {5}\nHumidity: {7}\nPitch: {8}\nRoll: {9}\nObjectDistanceFront: {10}\nObjectDistanceBack: {11}"
+            logmessageFormat = "Latitude: {0}\nLongitude: {1}\nAltitude: {2} Course: {3}\nHeading: {4}\nSpeed: {5}\nTemperature: {5}\nHumidity: {7}\nPitch: {8}\nRoll: {9}\nObjectDistanceFront: {10}\nObjectDistanceBack: {11}\nOther: {12}"
             
             #Create message
-            logmessage = messageFormat.format(data["latitude"], data["longitude"], data["altitude"], data["course"], data["heading"], data["speed"], data["temperature"], data["humidity"], data["pitch"], data["roll"], data["objdistfront"], data["objdistback"])
+            logmessage = messageFormat.format(data["latitude"], data["longitude"], data["altitude"], data["course"], data["heading"], data["speed"], data["temperature"], data["humidity"], data["pitch"], data["roll"], data["objdistfront"], data["objdistback"], data["other"])
             
             #Create header
             logheader = "[{0}:{1}:{2}_{3}-{4}-{5}]".format(data["hour"], data["minute"], data["second"], data["year"], data["month"], data["day"])

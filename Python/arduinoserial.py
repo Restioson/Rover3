@@ -43,8 +43,9 @@ class ArduinoSerialConnection():
         data["longitude"] = message.pop(0)
         data["altitude"] = message.pop(0)
         data["course"] = message.pop(0)
-        data["speed"] = message.pop(0)
         data["heading"] = message.pop(0)
+        data["speed"] = message.pop(0)
+
             
         #Parse time data
         data["year"] = message.pop(0)
