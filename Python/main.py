@@ -63,8 +63,12 @@ class RequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
         self.data = self.request.recv(1024)
         
+        print("Got packet: '{0}'".format(self.data))
+        
         if self.data == "start":
-            subprocess.call(["sudo", "uv4l", "--config-file=/etc/uv4l/uv4l_raspicam.conf"])
+            subprocess.call(["sudo", "uv4l", "--auto-video_nr", "--driver", "raspicam", "--encoding", "h264", "--width", "640", "--height", "480", "--vflip", "on", 
+"--framerate", "30", "--server-option", "'--port=8080'", "--server-option", "'--max-queued-connections=30'", "--server-option", 
+"'--max-streams=5'", "--server-option", "'--max-threads=29'"])
         
         elif self.data == "stop":
             subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])

@@ -22,17 +22,20 @@ class Logger():
         highest = 1
         
         #Find highest log file number
-        if os.path.isdir(directory):
-            for filename in os.listdir(directory):  
-                #Taken from "tinyurl.com/numberInString", fmark's answer
-                if [int(character) for character in filename.split() if character.isdigit()][0] > highest:
-                    highest = [int(character) for character in filename.split() if character.isdigit()][0]
-        else:
-            os.makedirs(directory)
-            highest = 0
-        
-        #Set filename
-        self.filename = datetime.datetime.now().strftime('{0}.log.gz'.format(str(highest+1)))
+        try:
+            if os.path.isdir(directory):
+                for filename in os.listdir(directory):  
+                    #Taken from "tinyurl.com/numberInString", fmark's answer
+                    if [int(character) for character in filename.split() if character.isdigit()][0] > highest:
+                        highest = [int(character) for character in filename.split() if character.isdigit()][0]
+            else:
+                os.makedirs(directory)
+                highest = 0
+            
+            #Set filename
+            self.filename = datetime.datetime.now().strftime('{0}.log.gz'.format(str(highest+1)))
+        except:
+            self.filename = "log.log.gz"
     
         #Create file path
         self.filepath = os.path.join(directory, self.filename)
