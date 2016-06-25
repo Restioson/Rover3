@@ -11,6 +11,9 @@ class Main():
     
     #Initialiser
     def __init__(self):
+    
+        #Stop UV4L
+        subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
         
         #Server
         self.server = socketserver.TCPServer(("0.0.0.0", 1895), RequestHandler)
@@ -50,6 +53,8 @@ class Main():
                 
                 #Log
                 self.logger.log(logmessage, logheader)
+        else:
+            while True: pass #Keep daemon running
 
             
 #Request handler class
@@ -59,7 +64,7 @@ class RequestHandler(socketserver.BaseRequestHandler):
         self.data = self.request.recv(1024)
         
         if self.data == "start":
-            subprocess.call(["/etc/init.d/uv4l_raspicam", "start"])
+            subprocess.call(["sudo", "uv4l", "--config-file=/etc/uv4l/uv4l_raspicam.conf"])
         
         elif self.data == "stop":
             subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
