@@ -2,7 +2,7 @@
 import time
 import log
 import arduinoserial
-import socketserver
+import SocketServer as socketserver
 import subprocess
 import threading
 
@@ -13,7 +13,7 @@ class Main():
     def __init__(self):
         
         #Server
-        self.server = socketserver.TCPServer(("0.0.0.0", "1895"), RequestHandler)
+        self.server = socketserver.TCPServer(("0.0.0.0", 1895), RequestHandler)
         
         #Initialise logger
         self.logger = log.Logger("/home/pi/log/")
