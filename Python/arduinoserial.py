@@ -15,7 +15,7 @@ class ArduinoSerialConnection():
         self.baud = baud
         
         #Whether the time has been set
-        self.timeset = False
+        self.timeSet = False
         
         #Initialise serial connection
         self.serial = serial.Serial(port, baud, timeout=handshaketimeout)
@@ -63,12 +63,16 @@ class ArduinoSerialConnection():
         data["objdistfront"] = message.pop(0)
         data["objdistback"] = message.pop(0)
         
+        #XBee transmissions since last serial exchange
+        data["xbeeDataReceived"] = message.pop(0)
+        data["xbeeDataSent"] = message.pop(0)
+        
         #Other data, e.g things the arudino process wants to get logged
-        data["other"] = " ".join(map(str, message))
+        data["other"] = message.pop(0)
         
         #Set time
-        if not self.timeset:
-            call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(data["year"], data["month"], data["day"], data["hour"], data["minute"], data["second"])])
+        if not self.timSet:
+            call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(data["year"], data["month"], data["day"], data["hour"], data["minute"], data["second"])]) #Sets the time according to GPS reading
             self.timeset = True
         
         return data

@@ -1,4 +1,4 @@
-// Rover v3 Multifunction: GPS, Tilt-compensated compass, ultrasonic range finder, FlyCam, Temperature Sensor, Speaker
+// Rover v3 Multifunction: GPS, Tilt-compensated compass, ultrasonic range finder, FlyCam, temperature sensor, speaker, etc
 
 // HMC6343 Compass: uses SDA/SCL on pins 20 and 21
 #include <Wire.h>
@@ -40,7 +40,6 @@ float rear_range_cm = 0;
 boolean debug = false;
 
 Servo myservo;  // create servo object to control a servo
-                // a maximum of eight servo objects can be created
  
 // notes in the melody:
 
@@ -97,7 +96,7 @@ float humidity_dht22 = 0;
 // The address of the remote XBee
 #define REMOTE_XBEE_ADDR     0x4256
 
-// Create an array for holding the data you want to send.
+// Char array of data being sent
 uint8_t payload[] = { 'H', 'i', ' ', '\n', '\r' };
 
 // 16-bit addressing: Enter address of remote XBee, typically the coordinator
@@ -338,6 +337,9 @@ void loop ()
       Serial.write(" ");
       Serial.println(data, DEC);
       Serial.println();
+
+      //Add data to list of packets received
+      xbeePacketsReceived[sizeof(xbeePacketsReceived)] = data;
     } else 
     
     if (xbee.getResponse().isError()) {
@@ -799,76 +801,68 @@ void writeStatus() {
   unsigned long fix_age;
  
   gps.crack_datetime(&year, &month, &day, &hour, &minutes, &second, &hundredths, &fix_age);
-  
-  Serial.print("Lat/Long: "); 
-  Serial.print(gps_latitude,5); 
-  Serial.print(", "); 
-  Serial.print(gps_longitude,5);
-  
-  Serial.print("  ");
-  
-  // Here you can print the altitude and course values directly since 
-  // there is only one value for the function
-  Serial.print("Altitude (m): "); Serial.print(gps.f_altitude());  
-  Serial.print("  ");
-  // Same goes for course
-  Serial.print("Course (degrees): "); Serial.print(gps.f_course()); 
-  Serial.print("  ");
-  
-  // And same goes for speed
-  Serial.print("Speed(kmph): "); Serial.print(gps.f_speed_kmph());
-  
-    // Range Finder, URF Front
-    Serial.print(" Fwd_Range=");
-    Serial.print(fwd_range_cm);
-        
-    // Range Finder, IR Rear
-    Serial.print(" Rear_Range=");
-    Serial.print(rear_range_cm);
-        
-    // Compass
-     Serial.print(" Heading=");             // Print the sensor readings to the serial port.
-    Serial.print(compass_heading);
-    
-    Serial.print(" Pitch=");
-    Serial.print(compass_pitch);
-    
-    Serial.print(" Roll=");
-    Serial.print(compass_roll);
 
-    Serial.print(" TemperatureC=");
-    Serial.print(temperature_dht22);
+  // Convert xbee data sent to string
+  if (sizeof(XbeeDataSent) == 0) {
+    String XbeeDataSentString = "none";
+  }
+
+  else {
     
-    Serial.print(" Humidity%=");
-    Serial.print(humidity_dht22);
-
-    // Motor speed
-    Serial.print(" Fwd_speed=");
-    Serial.print(forward_speed);
-
-    // Time
-    char timeStr[25];
-    sprintf(timeStr, "%02d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minutes, second);
-    Serial.print(" Time=");
-    Serial.println(timeStr);
-
-    // *****************
-
-    // Rasperry Pi Serial
-    Serial1.print("GPS ");
-    Serial1.print(gps_latitude,5); 
-    Serial1.print(","); 
-    Serial1.print(gps_longitude,5);
-    Serial1.print(","); 
-    Serial1.print(gps.f_course());
-    Serial1.print(","); 
-    Serial1.print(gps.f_speed_kmph());
-    Serial1.print(","); 
-    Serial1.println(compass_heading);
+    String xbeeDataSentString;
     
-    Serial1.print("TIME ");
-    Serial1.println(timeStr);
+    for (int i = 0; i > sizeof(XbeeDataSent); i++) {
+      XbeeDataSentString.concat("\"") // Sends " character
+      XbeeDataSentString.concat(XbeeDataSent[i])
+      XbeeDataSentString.concat("\";") // Sends " and ; characters (not separated)
+    }
     
+  }
+  
+  // Convert xbee data received to string
+  if (sizeof(XbeeDataReceived) == 0) {
+    String XbeeDataReceivedString = "none";
+  }
+
+  else {
+    
+    String xbeeDataReceivedString;
+    
+    for (int i = 0; i > sizeof(XbeeDataSent); i++) {
+      XbeeDataReceivedString.concat("\"") // Sends " character
+      XbeeDataReceivedString.concat(XbeeDataSent[i])
+      XbeeDataReceivedString.concat("\";") // Sends " and ; characters (not separated)
+    }
+    
+  }
+
+  // Get other data to send
+  String otherData = "none"; // ***** PLACEHOLDER *****
+  
+  String logMessage = new String().concat(gps_latitude)
+    .concat(gps_longitude)
+    .concat(gps.f_altitude())
+    .concat(gps.f_course())
+    .concat(compass_heading)
+    .concat(gps.f_speed_kmph())
+    .concat(year)
+    .concat(month)
+    .concat(day)
+    .concat(hour)
+    .concat(minute)
+    .concat(second)
+    .concat(temperature_dht22)
+    .concat(humidity_dht22)
+    .concat(compass_pitch)
+    .concat(compass_roll)
+    .concat(fwd_range_cm)
+    .concat(rear_range_cm)
+    .concat(XbeeDataReceivedString)
+    .concat(XbeeDataSentString)
+    .concat(otherData);
+  
+  Serial.print(logmessage); 
+  
      nextstatus_serial = millis() + status_interval_serial;
   }
   
