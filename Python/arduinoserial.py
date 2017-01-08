@@ -3,6 +3,7 @@
 #Imports
 import serial
 from subprocess import call
+import log
 
 #Arduino-RaspberryPi serial connection class
 class ArduinoSerialConnection():
@@ -14,8 +15,8 @@ class ArduinoSerialConnection():
         self.port = port
         self.baud = baud
         
-        #Whether the time has been set
-        self.timeSet = False
+        #Whether the system time has been set to GPS UTC time
+        self.time_set = False
         
         #Initialise serial connection
         self.serial = serial.Serial(port, baud, timeout=handshaketimeout)
@@ -71,8 +72,8 @@ class ArduinoSerialConnection():
         data["other"] = message.pop(0)
         
         #Set time
-        if not self.timSet:
+        if not self.time_set:
             call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(data["year"], data["month"], data["day"], data["hour"], data["minute"], data["second"])]) #Sets the time according to GPS reading
-            self.timeset = True
+            self.timeSet = True
         
         return data
