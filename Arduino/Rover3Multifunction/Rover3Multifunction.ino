@@ -1,4 +1,4 @@
-// Rover v3 Multifunction: GPS, Tilt-compensated compass, ultrasonic range finder, FlyCam, temperature sensor, speaker, etc
+// Rover v3 Multifunction: GPS, Tilt-compensated compass, ultrasonic range finder, temperature sensor, speaker, etc
 
 // HMC6343 Compass: uses SDA/SCL on pins 20 and 21
 #include <Wire.h>
@@ -8,9 +8,6 @@
 
 // Temperature & Humiditiy Sensor
 #include <DHT22.h>
-
-// FlyCam
-#include <Servo.h>
 
 // XBEE: uses Serial2 port on pins 16 and 17
 #include <XBee.h>
@@ -24,14 +21,11 @@
 // Temperature sensor
 #define DHT22_PIN            42
 
-// FlyCam
-#define FLYCAM_PWM_PIN       44
-
 // Ultrasonic Range Finder (forward-facing)
 #define MAXSONAR_ACTIVE_PIN  43
 #define MAXSONAR_PWM_PIN     45
 
-// Infrared range sensor (rear-racing)
+// Infrared range sensor (rear-facing)
 #define IR_RANGE_PIN         15
 
 float ir_sensor_value = 0;
@@ -169,10 +163,6 @@ void setup () {
   
   // Tell XBee to start Serial
   xbee.begin(9600);
-
-  // FlyCam
-  myservo.attach(FLYCAM_PWM_PIN);  // attaches the servo on pin 9 to the servo object
-  myservo.write(0);              // tell servo to go to position in variable 'pos'
 
   // Motors
   
@@ -666,15 +656,6 @@ void readTemperature() {
   
   nextpoll_dht22 = millis() + poll_interval_dht22;
   
-}
-
-// FlyCam
-
-void FlyCamButton() {
-  Serial.println("Button");
-  myservo.write(180);              // tell servo to go to position in variable 'pos'
-  delay(250);
-  myservo.write(0);              // tell servo to go to position in variable 'pos'
 }
 
 // ***** MOTORS *******
