@@ -4,7 +4,6 @@
 import os
 import datetime
 import gzip
-import enum
 
 #Logger class   
 class Logger():
