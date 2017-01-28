@@ -2,7 +2,9 @@
 
 
 #Imports
-import SocketServer as socketserver
+
+try: import SocketServer as socketserver #Python 2
+except: import socketserver #Python 3
 
 #Handler class
 class IPClientHandler():
