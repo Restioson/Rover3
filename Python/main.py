@@ -13,7 +13,7 @@ class Main():
     def __init__(self):
         
         #Initialise logger
-        self.logger = log.Logger("/media/missiondata/log")
+        self.logger = log.Logger("/mnt/missiondata/log")
         
         #Initialise serial
         self.serial_data_handler = datahandler.SerialDataHandler(self.logger)
