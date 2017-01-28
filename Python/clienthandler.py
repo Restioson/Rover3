@@ -14,6 +14,9 @@ class IPClientHandler():
     #Init
     def __init__(self, logger):
         
+        #Logger
+        self.logger = logger
+        
         #Initialise SocketServer to listen to incoming commands from client
         self.server = socketserver.TCPServer(("0.0.0.0", 1895), RequestHandler)
           
