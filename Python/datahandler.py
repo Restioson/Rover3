@@ -3,7 +3,7 @@
 class SerialDataHandler():
     
     #Init
-    def __init__(sel, logger):
+    def __init__(self, logger):
         
         #Whether time is set to GPS UTC
         self.time_set = False
