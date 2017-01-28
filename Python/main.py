@@ -26,6 +26,9 @@ class Main():
         
         #Stop UV4L (if running)
         subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
+        
+        #Begin videoing
+        self.camera_handler.begin_recording()
     
     #Mainloop of program
     def main_loop(self):
