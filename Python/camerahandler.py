@@ -5,6 +5,7 @@
 import picamera
 import time
 import threading
+import os
 
 #Camera handler class
 class CameraHandler():
