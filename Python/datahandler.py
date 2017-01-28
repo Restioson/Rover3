@@ -76,8 +76,6 @@ class SerialDataHandler():
                 subprocess.call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(time["year"], time["month"], time["day"], time["hour"], time["minute"], data["second"])]) #Sets the time according to GPS reading
                 self.timeSet = True
             
-            self.logger.log(
-            
             #Create data log format
             log_message_format = "".join([
                 "Latitude: {0}; ",
