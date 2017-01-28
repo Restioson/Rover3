@@ -5,7 +5,7 @@
 import SocketServer as socketserver
 
 #Handler class
-class IPClientHandler()
+class IPClientHandler():
 
     #Init
     def __init__(self):
