@@ -16,7 +16,7 @@ class Main():
         self.logger = log.Logger("/home/pi/log/")
         
         #Initialise serial
-        self.serial_data_handler = datahandler.SerialDataHandler()
+        self.serial_data_handler = datahandler.SerialDataHandler(self.logger)
             
         #Initialise camera handler
         self.camera_handler = camerahandler.CameraHandler()
