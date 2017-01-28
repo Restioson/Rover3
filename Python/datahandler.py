@@ -12,7 +12,9 @@ class SerialDataHandler():
         self.logger = logger
         
         #Connect to serial
-        try: connect_to_serial()
+        try: 
+            connect_to_serial()
+            logger.log("Connected to serial", "INFO")
         except: self.serial = None
     
     def connect_to_serial(self):
@@ -76,8 +78,13 @@ class SerialDataHandler():
 
             #Set time
             if not self.time_set:
-                subprocess.call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(time["year"], time["month"], time["day"], time["hour"], time["minute"], data["second"])]) #Sets the time according to GPS reading
+                
+                subprocess.call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(data["year"], data["month"], data["day"], data["hour"], data["minute"], data["second"])]) #Sets the time according to GPS reading
+                
                 self.timeSet = True
+                
+                #Log
+                self.logger.log("System time set to GPS time", "INFO")
             
             #Create data log format
             log_message_format = "".join([
@@ -112,22 +119,13 @@ class SerialDataHandler():
                 data["other"]
             )
             
-            #Get time and create datetime object from it
-            current_datetime = datetime.datetime(
-                data["year"], 
-                data["month"], 
-                data["day"], 
-                data["hour"], 
-                data["minute"], 
-                data["second"], 
-                data["day"]
-            )
-            
             #Log
-            self.logger.log(logmessage, current_datetime, "DATA")
+            self.logger.log(logmessage, "DATA")
         
         #Try connect to serial
         else:
             
-            try: connect_to_serial()
+            try: 
+                connect_to_serial()
+                logger.log("Connected to serial", "INFO")
             except: pass

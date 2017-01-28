@@ -47,7 +47,7 @@ class Logger():
         self.file.flush()
     
     #Logs to file
-    def log(self, message, current_datetime = datetime.datetime.now(), tag = "INFO"):
+    def log(self, message,  tag = "INFO", current_datetime = datetime.datetime.now()):
         
         if not self.closed:
             

@@ -11,7 +11,7 @@ import os
 class CameraHandler():
     
     #Init
-    def __init__(self):
+    def __init__(self, logger):
         
         #Init variables
         self.file_name = None
@@ -27,6 +27,10 @@ class CameraHandler():
         self.camera.vflip = True
         self.camera.resolution = (1920, 1080)
         self.camera.framerate = 25
+        
+        #Log
+        logger.log("Camera switched on", "INFO")
+        
         
     #Begins recording threads
     def begin_recording(self, directory = "/mnt/missiondata/video/"):

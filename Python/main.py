@@ -19,16 +19,18 @@ class Main():
         self.serial_data_handler = datahandler.SerialDataHandler(self.logger)
             
         #Initialise camera handler
-        self.camera_handler = camerahandler.CameraHandler()
+        self.camera_handler = camerahandler.CameraHandler(self.logger)
         
         #Initialise IP client handler
-        self.ip_client_handler = clienthandler.IPClientHandler()
+        self.ip_client_handler = clienthandler.IPClientHandler(self.logger)
         
         #Stop UV4L (if running)
         subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
         
         #Begin videoing
         self.camera_handler.begin_recording()
+        
+        logger.log("Rover3 script initialised", "INFO")
     
     #Mainloop of program
     def main_loop(self):
