@@ -3,10 +3,13 @@
 class SerialDataHandler():
     
     #Init
-    def __init__(self):
+    def __init__(sel, logger):
         
         #Whether time is set to GPS UTC
         self.time_set = False
+        
+        #Logger
+        self.logger = logger
         
         #Connect to serial
         try: connect_to_serial()
@@ -63,7 +66,7 @@ class SerialDataHandler():
         return data
         
     
-    def handle(self, logger):
+    def handle(self):
             
         #Handle data if connected to serial
         if self.serial:
