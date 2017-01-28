@@ -42,8 +42,8 @@ class Logger():
         self.file = gzip.GzipFile(self.filepath, "wb")
         
         #Begin log file
-        self.file.write("{0} [{1}] Began logging to {2}\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO", self.filepath))
-        self.file.write("{0} [{1}] Using system time; GPS time not acquired yet. Time may be inaccurate".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO"))
+        self.file.write("{0} [{1}] Began logging to {2}\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO", self.filepath).encode("utf-8")
+        self.file.write("{0} [{1}] Using system time; GPS time not acquired yet. Time may be inaccurate".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO").encode("utf-8"))
         self.file.flush()
     
     #Logs to file
@@ -58,7 +58,7 @@ class Logger():
             message = "{0} [{1}] {2}\n".format(header, tag, message)
         
             #Write message to file
-            self.file.write(message)
+            self.file.write(message.encode("utf-8"))
             self.file.flush()
             
         else:
