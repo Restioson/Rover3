@@ -9,7 +9,7 @@ class SerialDataHandler():
         self.time_set = False
         
         #Logger
-        self.logger = self.logger
+        self.logger = logger
         
         #Connect to serial
         try: 
