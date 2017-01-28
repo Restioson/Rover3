@@ -28,7 +28,7 @@ class CameraHandler():
         self.camera.framerate = 25
         
     #Begins recording threads
-    def begin_recording(self, directory = "/media/usb/video/"):
+    def begin_recording(self, directory = "/media/missiondata/video/"):
         
         #Find highest video file number
         try:
