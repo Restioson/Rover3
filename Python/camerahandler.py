@@ -19,6 +19,7 @@ class CameraHandler():
         self.file = None
         self.thread = None
         self.flush_thread = None
+        self.logger = logger
         
         #Init camera
         self.camera = picamera.PiCamera()
@@ -29,7 +30,7 @@ class CameraHandler():
         self.camera.framerate = 25
         
         #Log
-        logger.log("Camera switched on", "INFO")
+        self.logger.log("Camera switched on", "INFO")
         
         
     #Begins recording threads

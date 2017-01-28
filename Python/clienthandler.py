@@ -34,7 +34,7 @@ class RequestHandler(socketserver.BaseRequestHandler):
     def handle(self, logger):
         self.data = self.request.recv(1024)
         
-        logger.log("Got packet from IP client: '{0}'".format(self.data), tag = "INFO")
+        self.logger.log("Got packet from IP client: '{0}'".format(self.data), tag = "INFO")
         
         if self.data == "start":
             

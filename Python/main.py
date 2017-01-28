@@ -16,7 +16,7 @@ class Main():
         #Check if usb is mounted
         if os.path.ismount("/mnt/missiondata"):
             
-            #Initialise logger
+            #Initialise self.logger
             self.logger = log.Logger("/mnt/missiondata/log")
             
             #Initialise camera handler
@@ -25,7 +25,7 @@ class Main():
         #If not, fall back to SD card:
         else:
             
-            #Initialise logger
+            #Initialise self.logger
             self.logger = log.Logger("/home/pi/missiondata/log")
             
             #Initialise camera handler
@@ -44,7 +44,7 @@ class Main():
         #Begin videoing
         self.camera_handler.begin_recording()
         
-        logger.log("Rover3 script initialised", "INFO")
+        self.logger.log("Rover3 script initialised", "INFO")
     
     #Mainloop of program
     def main_loop(self):

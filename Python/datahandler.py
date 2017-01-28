@@ -9,12 +9,12 @@ class SerialDataHandler():
         self.time_set = False
         
         #Logger
-        self.logger = logger
+        self.logger = self.logger
         
         #Connect to serial
         try: 
             connect_to_serial()
-            logger.log("Connected to serial", "INFO")
+            self.logger.log("Connected to serial", "INFO")
         except: self.serial = None
     
     def connect_to_serial(self):
@@ -127,5 +127,5 @@ class SerialDataHandler():
             
             try: 
                 connect_to_serial()
-                logger.log("Connected to serial", "INFO")
+                self.logger.log("Connected to serial", "INFO")
             except: pass
