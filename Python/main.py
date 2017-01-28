@@ -19,7 +19,7 @@ class Main():
         self.serial_data_handler = datahandler.SerialDataHandler()
             
         #Initialise camera handler
-        self.camera_handler = camerhandler.CameraHandler()
+        self.camera_handler = camerahandler.CameraHandler()
         
         #Initialise IP client handler
         self.ip_client_handler = clienthandler.IPClientHandler()
