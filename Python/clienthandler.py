@@ -16,9 +16,9 @@ class IPClientHandler():
         self.server = socketserver.TCPServer(("0.0.0.0", 1895), RequestHandler)
           
         #Start server thread
-        server_thread = threading.Thread(target=self.server.serve_forever)
-        server_thread.daemon = True
-        server_thread.start()
+        self.server_thread = threading.Thread(target=self.server.serve_forever)
+        self.server_thread.daemon = True
+        self.server_thread.start()
         
 #Request handler class
 class RequestHandler(socketserver.BaseRequestHandler):

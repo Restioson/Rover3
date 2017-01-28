@@ -18,8 +18,11 @@ class Main():
         #Initialise serial
         self.serial_data_handler = datahandler.SerialDataHandler()
             
-        #Initialise serial parser
-        self.serial_parser = arduinoserial.SerialParser()
+        #Initialise camera handler
+        self.camera_handler = camerhandler.CameraHandler()
+        
+        #Initialise IP client handler
+        self.ip_client_handler = clienthandler.IPClientHandler()
         
         #Stop UV4L (if running)
         subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
