@@ -153,7 +153,7 @@ class SerialDataHandler():
                 )
                 
                 #Log
-                self.logger.log(logmessage, "DATA")
+                self.logger.log(log_message, "DATA")
                 
                 #Shutdown Pi
                 if data["other"] == "CMD:SHUTDOWN":

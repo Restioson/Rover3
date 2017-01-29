@@ -39,6 +39,7 @@ class CameraHandler():
     def begin_recording(self, directory = "/mnt/missiondata/video/"):
         
         #Find highest video file number
+        highest = 0
         try:
             
             if os.path.isdir(directory):
@@ -50,7 +51,6 @@ class CameraHandler():
                         
             else:
                 os.makedirs(directory)
-                highest = 0
             
             #Set file_name
             self.file_name = datetime.datetime.now().strftime('{0}.h264'.format(str(highest + 1)))
