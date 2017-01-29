@@ -140,6 +140,8 @@ int distance_slowdown = 150;
 int distance_rear_slowdown = 75;
 int speed_slow = 60;
 
+int shutdown_pi = 0;
+
 // This is where you declare prototypes for the functions that will be 
 // using the TinyGPS library.
 void getgps(TinyGPS &gps);
@@ -391,14 +393,26 @@ void loop ()
               turnRight(250);
               break;
         
+      case '<' :
+              pivotLeft(250);
+              break;
+
+      case '>' :
+              pivotRight(250);
+              break;
+
       case ' ' :
                stopMotors();
               break;
-              
+
       case 'T' :
               testMotors();
               break;
-              
+
+      case '/' :
+              shutdownPi();
+              break;
+
 //      default:
 //              flashLed(errorLed, 1, 25);
 //              Serial.print("unexpected command: ");
@@ -414,6 +428,11 @@ void loop ()
 }
 
 // ********** FUNCTIONS ***********
+
+void shutdownPi()
+{
+  shutdown_pi = 1;
+}
 
 void turnLeft(int power)
 {
@@ -443,6 +462,35 @@ void turnRight(int power)
   // TODO
 }
 
+void pivotLeft(int power)
+{
+  stopMotors();
+
+  Serial.print("PivotLeft ");
+  Serial.print(power);
+  Serial.print(" ...\n");
+
+  motorGo(0, CW, power);
+  motorGo(1, CCW, power);
+
+  // TODO
+}
+
+void pivotRight(int power)
+{
+  stopMotors();
+
+  Serial.print("PivotRight ");
+  Serial.print(power);
+  Serial.print(" ...\n");
+
+  motorGo(0, CCW, power);
+  motorGo(1, CW, power);
+
+  // TODO
+}
+
+
 
 void goForward(int power)
 {
@@ -456,7 +504,7 @@ void goForward(int power)
   Serial.print(" ...\n");
 
   motorGo(0, CW, power);
-  motorGo(1, CW, power);
+  motorGo(1, CW, power * 0.87);
     
   // enable range finder
   digitalWrite(MAXSONAR_ACTIVE_PIN, HIGH);
@@ -474,7 +522,7 @@ void goBack(int power)
   Serial.print(" ...\n"); 
 
   motorGo(0, CCW, power);
-  motorGo(1, CCW, power);
+  motorGo(1, CCW, power * 0.87);
   
   back_speed = power;
   
@@ -595,7 +643,7 @@ void getgps(TinyGPS &gps)
   Serial.print("Altitude (meters): "); Serial.print(gps.f_altitude());  
   Serial.print("  ");
   // Same goes for course
-  Serial.print("Course (degrees): "); Serial.print(gps.f_course()); 
+  Serial.print("Course (degrees): "); Serial.print(gps.f_course());
   Serial.print("  ");
   
   // And same goes for speed
@@ -809,10 +857,10 @@ void writeStatus() {
   
   // Here you can print the altitude and course values directly since 
   // there is only one value for the function
-  Serial.print("Altitude (m): "); Serial.print(gps.f_altitude());  
+  Serial.print("Alt (m): "); Serial.print(gps.f_altitude());
   Serial.print("  ");
   // Same goes for course
-  Serial.print("Course (degrees): "); Serial.print(gps.f_course()); 
+  Serial.print("Course (deg): "); Serial.print(gps.f_course());
   Serial.print("  ");
   
   // And same goes for speed
@@ -836,7 +884,7 @@ void writeStatus() {
     Serial.print(" Roll=");
     Serial.print(compass_roll);
 
-    Serial.print(" TemperatureC=");
+    Serial.print(" TempC=");
     Serial.print(temperature_dht22);
     
     Serial.print(" Humidity%=");
@@ -845,6 +893,10 @@ void writeStatus() {
     // Motor speed
     Serial.print(" Fwd_speed=");
     Serial.print(forward_speed);
+
+    // Pi Shutdown
+    Serial.print(" Shutdown=");
+    Serial.print(shutdown_pi);
 
     // Time
     char timeStr[25];
@@ -859,7 +911,9 @@ void writeStatus() {
     Serial1.print(gps_latitude,5); 
     Serial1.print(","); 
     Serial1.print(gps_longitude,5);
-    Serial1.print(","); 
+    Serial1.print(",");
+    Serial1.print(gps.f_altitude());
+    Serial1.print(",");
     Serial1.print(gps.f_course());
     Serial1.print(","); 
     Serial1.print(gps.f_speed_kmph());
@@ -869,8 +923,25 @@ void writeStatus() {
     Serial1.print("TIME ");
     Serial1.println(timeStr);
     
+    Serial1.print("SENSOR ");
+    Serial1.print(temperature_dht22);
+    Serial1.print(",");
+    Serial1.print(humidity_dht22);
+    Serial1.print(",");
+    Serial1.print(compass_pitch);
+    Serial1.print(",");
+    Serial1.print(compass_roll);
+    Serial1.print(",");
+    Serial1.print(fwd_range_cm);
+    Serial1.print(",");
+    Serial1.println(rear_range_cm);
+
+    if (shutdown_pi) {
+       Serial1.println("BREAK serial");
+    }
+
      nextstatus_serial = millis() + status_interval_serial;
   }
-  
+
   return;
 }

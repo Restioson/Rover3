@@ -44,9 +44,41 @@ Direction joystickDirection = STOP;
 // Serial movement commands
 int serialcom = 0;
 
+// Buttons
+const byte PIN_BUTTON_SELECT = 2; // Select button is triggered when joystick is pressed
+const byte PIN_BUTTON_RIGHT = 3;
+const byte PIN_BUTTON_UP = 4;
+const byte PIN_BUTTON_DOWN = 5;
+const byte PIN_BUTTON_LEFT = 6;
+
 // ********** SETUP ***********
 
 void setup () {
+
+  // Switch pins
+  // Specify each pin connected to a pushbutton as an input.
+  // Also enable the Arduino's internal "pull-up" resistors
+  // for each pushbutton we want to read--this means the shield
+  // doesn't need to have resistors on it.
+  // Note that when a pull-up resistor is used on a pin the
+  // meaning of the values read are reversed compared to their
+  // usual meanings:
+  //    * HIGH = the button is not pressed
+  //    * LOW = the button is pressed
+  pinMode(PIN_BUTTON_RIGHT, INPUT);
+  digitalWrite(PIN_BUTTON_RIGHT, HIGH);
+
+  pinMode(PIN_BUTTON_LEFT, INPUT);
+  digitalWrite(PIN_BUTTON_LEFT, HIGH);
+
+  pinMode(PIN_BUTTON_UP, INPUT);
+  digitalWrite(PIN_BUTTON_UP, HIGH);
+
+  pinMode(PIN_BUTTON_DOWN, INPUT);
+  digitalWrite(PIN_BUTTON_DOWN, HIGH);
+
+  pinMode(PIN_BUTTON_SELECT, INPUT);
+  digitalWrite(PIN_BUTTON_SELECT, HIGH);
 
   // Serial  
   Serial.begin(115200);
@@ -79,11 +111,35 @@ void loop ()
   int x = analogRead(xPin);
   int y = analogRead(yPin);
 
+  // Read switches
+  int d2 = digitalRead(PIN_BUTTON_SELECT);
+  int d3 = digitalRead(PIN_BUTTON_RIGHT);
+  int d4 = digitalRead(PIN_BUTTON_UP);
+  int d5 = digitalRead(PIN_BUTTON_DOWN);
+  int d6 = digitalRead(PIN_BUTTON_LEFT);
+
   // Output the values
+  /*
   Serial.print("Joystick x: ");
   Serial.print(x);
   Serial.print(" | y: ");
   Serial.println(y);
+  */
+
+  // Switch positions
+  /*
+  Serial.print("Switches: ");
+  Serial.print("D2=");
+  Serial.print(d2);
+  Serial.print(" D3=");
+  Serial.print(d3);
+  Serial.print(" D4=");
+  Serial.print(d4);
+  Serial.print(" D5=");
+  Serial.print(d5);
+  Serial.print(" D6=");
+  Serial.println(d6);
+  */
   
   // Forward: 25 < x < 70
   // Backwards: 300 < x < 350
@@ -148,6 +204,13 @@ void loop ()
       }
    } 
    
+  // Switch commands
+ if ((d2 == 0) && (d3 == 0)) {
+    // Shutdown raspberry pi
+    Serial.println("Command: shutdown pi");
+    sendCommand('/');
+ }
+
   // Send the command to the rover
   if (newDirection != currentDirection) {
     
@@ -164,13 +227,25 @@ void loop ()
             break;
 
        case LEFT:
-            Serial.println("Go left!"); 
-            sendCommand('A');
+            if (d5 == 0) {
+             // Pivot
+              Serial.println("Pivot left!");
+              sendCommand('<');
+            } else {
+              // Steer
+              Serial.println("Steer left!");
+              sendCommand('A');
+            }
             break;
             
        case RIGHT:
-            Serial.println("Go right!"); 
-            sendCommand('D');
+            if (d5 == 0) {
+              Serial.println("Pivot right!");
+              sendCommand('>');
+            } else {
+              Serial.println("Steer right!");
+              sendCommand('D');
+            }
             break;
      
        case STOP:
@@ -183,8 +258,8 @@ void loop ()
      currentDirection = newDirection; 
   }
 
-  delay(250); //just here to slow down the serial output - Easier to read
-  
+//  delay(250); //just here to slow down the serial output - Easier to read
+  delay(100);
   
 }
 
