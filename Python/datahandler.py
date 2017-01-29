@@ -95,33 +95,33 @@ class SerialDataHandler():
                 data_raw = str(self.serial.readline())
                 data = self.parse(data_raw)
                 
-            #Set time
-            if not self.time_set:
-                
-                #Try set the system time to GPS time
-                try:
+                #Set time
+                if not self.time_set:
                     
-                    #Sets the time according to GPS reading
-                    subprocess.check_call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(
-                        data["year"], 
-                        data["month"], 
-                        data["day"], 
-                        data["hour"], 
-                        data["minute"], 
-                        data["second"]
-                        )])
+                    #Try set the system time to GPS time
+                    try:
+                        
+                        #Sets the time according to GPS reading
+                        subprocess.check_call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(
+                            data["year"], 
+                            data["month"], 
+                            data["day"], 
+                            data["hour"], 
+                            data["minute"], 
+                            data["second"]
+                            )])
+                        
+                        #Set variable tracking whether using gps time to true
+                        self.timeSet = True
                     
-                    #Set variable tracking whether using gps time to true
-                    self.timeSet = True
-                
-                    #Log
-                    self.logger.log("System time set to GPS time", "INFO")
-                
-                #Error
-                except Exception as error:
+                        #Log
+                        self.logger.log("System time set to GPS time", "INFO")
                     
-                    #Log
-                    self.logger.log("Exception while setting system time: \"{0}\"".format(str(error.args)), "ERROR")
+                    #Error
+                    except Exception as error:
+                        
+                        #Log
+                        self.logger.log("Exception while setting system time: \"{0}\"".format(str(error.args)), "ERROR")
             
             #Exception
             except Exception as error:
