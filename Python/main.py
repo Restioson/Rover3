@@ -65,14 +65,13 @@ class Main():
 #Run program
 if __name__ == "__main__":
     
-    #Create mainclass object
+    #Create mainclass object and run mainloop
     try:
+        
         main = Main()
+        main.main_loop()
     
     #Error
     except Exception as error:
         
         print("Exception in initialisation: {0}".format(str(error.args)), flush = True)
-    
-    #main_loop
-    main.main_loop()
