@@ -45,7 +45,7 @@ class Logger():
         
         #Create file object
         self.file = lzma.LZMAFile(self.filepath, "wb")
-        self.uncompressed_file = open(os.path.join(directory, "current.log"))
+        self.uncompressed_file = open(os.path.join(directory, "current.log"), "w")
         
         #Begin log file
         self.file.write("{0} [{1}] Began logging to {2}\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO", self.filepath).encode("utf-8"))
@@ -69,6 +69,8 @@ class Logger():
             #Write message to file
             self.file.write(message.encode("utf-8"))
             self.file.flush()
+            self.uncompressed_file.write(message)
+            self.uncompressed_file.flush()
             
         else:
             
