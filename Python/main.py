@@ -26,7 +26,7 @@ class Main():
         else:
             
             #Initialise self.logger
-            self.logger = log.Logger("/home/pi/missiondata/log")
+            self.logger = log.Logger("/mnt/missiondata/log")
             
             #Initialise camera handler
             self.camera_handler = camerahandler.CameraHandler(self.logger)

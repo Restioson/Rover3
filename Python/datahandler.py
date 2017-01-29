@@ -5,6 +5,7 @@
 import subprocess
 import sys
 import time
+import serial
 
 #Handler class
 class SerialDataHandler():
@@ -73,10 +74,6 @@ class SerialDataHandler():
         data["objdistfront"] = message.pop(0)
         data["objdistback"] = message.pop(0)
         
-        #XBee transmissions since last serial exchange
-        data["xbeeDataReceived"] = message.pop(0)
-        data["xbeeDataSent"] = message.pop(0)
-        
         #Other data, e.g command
         data["other"] = message.pop(0)
         
@@ -93,88 +90,86 @@ class SerialDataHandler():
                 
                 data_raw = str(self.serial.readline())
                 data = self.parse(data_raw)
+                
+                #Set time
+                if not self.time_set:
+                    
+                    #Try set the system time to GPS time
+                    try:
+                        
+                        #Sets the time according to GPS reading
+                        subprocess.check_call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(
+                            data["year"], 
+                            data["month"], 
+                            data["day"], 
+                            data["hour"], 
+                            data["minute"], 
+                            data["second"]
+                            )])
+                        
+                        #Set variable tracking whether using gps time to true
+                        self.timeSet = True
+                    
+                        #Log
+                        self.logger.log("System time set to GPS time", "INFO")
+                    
+                    #Error
+                    except Exception as error:
+                        
+                        #Log
+                        self.logger.log("Exception while setting system time: \"{0}\"".format(str(error.args)), "ERROR")
+            
+                #Create data log format
+                log_message_format = "".join([
+                    "Latitude: {0}; ",
+                    "Longitude: {1}; ",
+                    "Altitude: {2}; ",
+                    "Course: {3}; ",
+                    "Heading: {4}; ",
+                    "Speed: {5}; ",
+                    "Temperature: {5}; ",
+                    "Humidity: {7}; ",
+                    "Pitch: {8}; ",
+                    "Roll: {9}; ",
+                    "ObjectDistanceFront: {10}; ",
+                    "ObjectDistanceBack: {11}; ",
+                    "Other: {12};\n"
+                ])
+            
+                #Create message
+                log_message = log_message_format.format(
+                    data["latitude"], 
+                    data["longitude"], 
+                    data["altitude"], 
+                    data["course"], 
+                    data["heading"], 
+                    data["speed"], 
+                    data["temperature"],
+                    data["humidity"], data["pitch"], 
+                    data["roll"], 
+                    data["objdistfront"], 
+                    data["objdistback"], 
+                    data["other"]
+                )
+                
+                #Log
+                self.logger.log(logmessage, "DATA")
+                
+                #Shutdown Pi
+                if data["other"] == "CMD:SHUTDOWN":
+                    
+                    self.logger.log("Received shutdown command, shutting down", "INFO")
+                    
+                    #Send halt command
+                    subprocess.call(["sudo", "halt"])
+                    
+                    #Exit program
+                    sys.exit(0)
             
             #Exception
             except Exception as error:
                 
-                self.logger.log("Exception while parsing \"{0}\": \"{1}\"".format(data_raw, str(error.args)), "ERROR")
-                
-
-            #Set time
-            if not self.time_set:
-                
-                #Try set the system time to GPS time
-                try:
-                    
-                    #Sets the time according to GPS reading
-                    subprocess.check_call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(
-                        data["year"], 
-                        data["month"], 
-                        data["day"], 
-                        data["hour"], 
-                        data["minute"], 
-                        data["second"]
-                        )])
-                    
-                    #Set variable tracking whether using gps time to true
-                    self.timeSet = True
-                
-                    #Log
-                    self.logger.log("System time set to GPS time", "INFO")
-                
-                #Error
-                except Exception as error:
-                    
-                    #Log
-                    self.logger.log("Exception while setting system time: \"{0}\"".format(str(error.args)), "ERROR")
-                    
-            
-            #Create data log format
-            log_message_format = "".join([
-                "Latitude: {0}; ",
-                "Longitude: {1}; ",
-                "Altitude: {2}; ",
-                "Course: {3}; ",
-                "Heading: {4}; ",
-                "Speed: {5}; ",
-                "Temperature: {5}; ",
-                "Humidity: {7}; ",
-                "Pitch: {8}; ",
-                "Roll: {9}; ",
-                "ObjectDistanceFront: {10}; ",
-                "ObjectDistanceBack: {11}; ",
-                "Other: {12};\n"
-            ])
-        
-            #Create message
-            log_message = log_message_format.format(
-                data["latitude"], 
-                data["longitude"], 
-                data["altitude"], 
-                data["course"], 
-                data["heading"], 
-                data["speed"], 
-                data["temperature"],
-                data["humidity"], data["pitch"], 
-                data["roll"], 
-                data["objdistfront"], 
-                data["objdistback"], 
-                data["other"]
-            )
-            
-            #Log
-            self.logger.log(logmessage, "DATA")
-            
-            #Shutdown Pi
-            if data["other"] == "CMD:SHUTDOWN":
-                
-                self.logger.log("Received shutdown command, shutting down", "INFO")
-                
-                #Send halt command
-                subprocess.call(["sudo", "halt"])
-                
-                #Exit program
-                sys.exit(0)
+                self.logger.log("Exception while parsing \"{0}\": \"{1}\"".format(data_raw, str(error.args)), "ERROR")                    
         
         #Try connect to serial
         else:

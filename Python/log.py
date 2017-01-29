@@ -45,11 +45,15 @@ class Logger():
         
         #Create file object
         self.file = lzma.LZMAFile(self.filepath, "wb")
+        self.uncompressed_file = open(os.path.join(directory, "current.log"), "w")
         
         #Begin log file
         self.file.write("{0} [{1}] Began logging to {2}\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO", self.filepath).encode("utf-8"))
-        self.file.write("{0} [{1}] Using system time; GPS time not acquired yet. Time may be inaccurate".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO").encode("utf-8"))
+        self.uncompressed_file.write("{0} [{1}] Began logging to {2}\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO", self.filepath))
+        self.file.write("{0} [{1}] Using system time; GPS time not acquired yet. Time may be inaccurate\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO").encode("utf-8"))
+        self.uncompressed_file.write("{0} [{1}] Using system time; GPS time not acquired yet. Time may be inaccurate\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO"))
         self.file.flush()
+        self.uncompressed_file.flush()
     
     #Logs to file
     def log(self, message,  tag = "INFO"):
@@ -65,6 +69,8 @@ class Logger():
             #Write message to file
             self.file.write(message.encode("utf-8"))
             self.file.flush()
+            self.uncompressed_file.write(message)
+            self.uncompressed_file.flush()
             
         else:
             

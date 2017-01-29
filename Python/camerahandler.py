@@ -55,8 +55,9 @@ class CameraHandler():
             #Set file_name
             self.file_name = datetime.datetime.now().strftime('{0}.h264'.format(str(highest + 1)))
             
-        except:
+        except Exception as error:
             self.file_name = "0.h264"
+            self.logger.log("Error: {0}".format(str(error.args)), "WARN")
     
         #Create file path
         self.filepath = os.path.join(directory, self.file_name)
