@@ -53,13 +53,26 @@ class Main():
         while True:
             
             #Handle serial data
-            self.serial_data_handler.handle()  
+            try:
+                
+                self.serial_data_handler.handle()
+            
+            #Error!
+            except Exception as error:
+                
+                self.logger.log("Exception in main loop while handling serial data: \"{0}\"".format(str(error.args)), "ERROR")
         
 #Run program
 if __name__ == "__main__":
     
     #Create mainclass object
-    main = Main()
+    try:
+        main = Main()
+    
+    #Error
+    except Exception as error:
+        
+        print("Exception in initialisation: {0}".format(str(error.args)), flush = True)
     
     #main_loop
     main.main_loop()
