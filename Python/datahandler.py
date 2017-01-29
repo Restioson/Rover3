@@ -94,13 +94,7 @@ class SerialDataHandler():
                 
                 data_raw = str(self.serial.readline())
                 data = self.parse(data_raw)
-            
-            #Exception
-            except Exception as error:
                 
-                self.logger.log("Exception while parsing \"{0}\": \"{1}\"".format(data_raw, str(error.args)), "ERROR")
-                
-
             #Set time
             if not self.time_set:
                 
@@ -128,7 +122,11 @@ class SerialDataHandler():
                     
                     #Log
                     self.logger.log("Exception while setting system time: \"{0}\"".format(str(error.args)), "ERROR")
-                    
+            
+            #Exception
+            except Exception as error:
+                
+                self.logger.log("Exception while parsing \"{0}\": \"{1}\"".format(data_raw, str(error.args)), "ERROR")                    
             
             #Create data log format
             log_message_format = "".join([
