@@ -6,9 +6,6 @@
 // GPS: uses the Serial3 port on pins 14 and 15
 #include <TinyGPS.h>
 
-// Temperature & Humiditiy Sensor
-#include <DHT22.h>
-
 // XBEE: uses Serial2 port on pins 16 and 17
 #include <XBee.h>
 
@@ -17,9 +14,6 @@
 
 // Speaker
 #define SPEAKER_PIN          51
-
-// Temperature sensor
-#define DHT22_PIN            42
 
 // Ultrasonic Range Finder (forward-facing)
 #define MAXSONAR_ACTIVE_PIN  43
@@ -56,9 +50,6 @@ float compass_roll = 0;
 // Create an instance of the TinyGPS object
 TinyGPS gps;
 
-// Setup a DHT22 instance
-DHT22 myDHT22(DHT22_PIN);
-
 // Motors
 
 #define BRAKEVCC 0
@@ -80,10 +71,6 @@ int statpin = 13;
 
 // RangeFinder
 long fwd_range_cm;
-
-// DHT22 / RHT03 Temperature & Humidity Sensor
-float temperature_dht22 = 0;
-float humidity_dht22 = 0;
 
 // The address of the remote XBee
 #define REMOTE_XBEE_ADDR     0x4256
@@ -108,9 +95,6 @@ uint8_t data = 0;
 
 unsigned long nextstatus_serial = 0;
 int status_interval_serial = 1000;    // status interval in ms
-
-unsigned long nextpoll_dht22 = 0;    // time of last poll
-int poll_interval_dht22 = 2500;      // poll interval in ms
 
 unsigned long nextpoll_compass = 0;  // time of last poll
 int poll_interval_compass = 500;     // poll interval in ms
@@ -281,10 +265,6 @@ void loop ()
   }
 
 
-  // Temperature and Humidity 
-  if (debug) Serial.println("Reading temperature");
-  // readTemperature();
-  
   // Compass: heading, pitch, roll
   if (debug) Serial.println("Reading compass data");
   readCompass();
@@ -651,59 +631,6 @@ void getgps(TinyGPS &gps)
   //Serial.println(); Serial.println();
 }
 
-// ********* TEMP SENSOR ********
-void readTemperature() {
-  
-  if (millis() <  nextpoll_dht22) {
-      // not time to poll yet
-      return;
-  }
-  
-  DHT22_ERROR_t errorCode;
-  
-  if (debug) {
-    Serial.print("Requesting DHT22 data...");
-  }
-  
-  errorCode = myDHT22.readData();
-  
-  switch(errorCode)
-  {
-    case DHT_ERROR_NONE:
-      temperature_dht22 = myDHT22.getTemperatureC();
-      humidity_dht22 = myDHT22.getHumidity();
-      break;
-      
-    case DHT_ERROR_CHECKSUM:
-      Serial.print("DHT check sum error ");
-      Serial.print(myDHT22.getTemperatureC());
-      Serial.print("C ");
-      Serial.print(myDHT22.getHumidity());
-      Serial.println("%");
-      break;
-    case DHT_BUS_HUNG:
-      Serial.println("DHT BUS Hung ");
-      break;
-    case DHT_ERROR_NOT_PRESENT:
-      Serial.println("DHT Not Present ");
-      break;
-    case DHT_ERROR_ACK_TOO_LONG:
-      Serial.println("DHT ACK time out ");
-      break;
-    case DHT_ERROR_SYNC_TIMEOUT:
-      Serial.println("DHT Sync Timeout ");
-      break;
-    case DHT_ERROR_DATA_TIMEOUT:
-      Serial.println("DHT Data Timeout ");
-      break;
-    case DHT_ERROR_TOOQUICK:
-      Serial.println("DHT Polled too quick ");
-      break;
-  }
-  
-  nextpoll_dht22 = millis() + poll_interval_dht22;
-  
-}
 
 // ***** MOTORS *******
 
@@ -828,40 +755,11 @@ void writeStatus() {
  
     gps.crack_datetime(&year, &month, &day, &hour, &minutes, &second, &hundredths, &fix_age);
   
-    // Convert xbee data sent to string
-    /*
-    String xbeeDataSentString;
-    if (sizeof(XbeeDataSent) == 0) {
-      XbeeDataSentString = "none";
-    } else {
-      for (int i = 0; i > sizeof(XbeeDataSent); i++) {
-        XbeeDataSentStringString("\"") // Sends " character
-        XbeeDataSentStringString(XbeeDataSent[i])
-        XbeeDataSentStringString("\";") // Sends " and ; characters (not separated)
-      }
-    }
-  
-    // Convert xbee data received to string
-    if (sizeof(XbeeDataReceived) == 0) {
-      String XbeeDataReceivedString = "none";
-    }
-    */
-    
     // Date/Time
     char timeStr[25];
     sprintf(timeStr, "%02d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minutes, second);
     
     // *****************
-
-    String xbeeDataReceivedString;
-    
-    /*
-    for (int i = 0; i > sizeof(XbeeDataSent); i++) {
-      XbeeDataReceivedStringString("\"") // Sends " character
-      XbeeDataReceivedStringString(XbeeDataSent[i])
-      XbeeDataReceivedStringString("\";") // Sends " and ; characters (not separated)
-    }
-    */
 
     // Get other data to send
     String otherData = "none"; // ***** PLACEHOLDER *****
@@ -871,9 +769,8 @@ void writeStatus() {
     }
 
     String logMessage = "DATA "
-//      + String(timeStr) + " " +
-      + String(gps_latitude, 3) + " "
-      + String(gps_longitude, 3) + " "
+      + String(gps_latitude, 5) + " "
+      + String(gps_longitude, 5) + " "
       + String(gps.f_altitude())+ " "
       + String(gps.f_course()) + " "
       + String(compass_heading) + " "
@@ -884,8 +781,8 @@ void writeStatus() {
       + String(hour) + " "
       + String(minutes) + " "
       + String(second) + " "
-      + String(temperature_dht22) + " "
-      + String(humidity_dht22) + " "
+      + "unknown "  // temperature
+      + "unknown "  // humidity
       + String(compass_pitch) + " "
       + String(compass_roll) + " "
       + String(fwd_range_cm) + " "
