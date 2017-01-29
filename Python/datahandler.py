@@ -74,10 +74,6 @@ class SerialDataHandler():
         data["objdistfront"] = message.pop(0)
         data["objdistback"] = message.pop(0)
         
-        #XBee transmissions since last serial exchange
-        data["xbeeDataReceived"] = message.pop(0)
-        data["xbeeDataSent"] = message.pop(0)
-        
         #Other data, e.g command
         data["other"] = message.pop(0)
         
