@@ -5,6 +5,7 @@
 import subprocess
 import sys
 import time
+import serial
 
 #Handler class
 class SerialDataHandler():
