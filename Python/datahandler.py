@@ -3,6 +3,7 @@
 
 #Imports
 import subprocess
+import sys
 
 #Handler class
 class SerialDataHandler():
@@ -72,7 +73,7 @@ class SerialDataHandler():
         data["xbeeDataReceived"] = message.pop(0)
         data["xbeeDataSent"] = message.pop(0)
         
-        #Other data, e.g things the arudino process wants to get logged
+        #Other data, e.g command
         data["other"] = message.pop(0)
         
         return data
@@ -159,6 +160,17 @@ class SerialDataHandler():
             
             #Log
             self.logger.log(logmessage, "DATA")
+            
+            #Shutdown Pi
+            if data["other"] == "CMD:SHUTDOWN":
+                
+                self.logger.log("Received shutdown command, shutting down", "INFO")
+                
+                #Send halt command
+                subprocess.call(["sudo", "halt"])
+                
+                #Exit program
+                sys.exit(0)
         
         #Try connect to serial
         else:
