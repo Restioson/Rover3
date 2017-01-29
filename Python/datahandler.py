@@ -4,6 +4,7 @@
 #Imports
 import subprocess
 import sys
+import time
 
 #Handler class
 class SerialDataHandler():
@@ -179,6 +180,7 @@ class SerialDataHandler():
         else:
             
             try: 
-                connect_to_serial()
+                time.sleep(2.5)
+                self.connect_to_serial()
                 self.logger.log("Connected to serial", "INFO")
-            except: pass
+            except Exception as error: self.logger.log("Failed to connect to serial: \"{0}\"".format(str(error.args)), "WARN")
