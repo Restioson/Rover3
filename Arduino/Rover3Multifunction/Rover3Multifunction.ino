@@ -1,4 +1,4 @@
-// Rover v3 Multifunction: GPS, Tilt-compensated compass, ultrasonic range finder, FlyCam, Temperature Sensor, Speaker
+// Rover v3 Multifunction: GPS, Tilt-compensated compass, ultrasonic range finder, temperature sensor, speaker, etc
 
 // HMC6343 Compass: uses SDA/SCL on pins 20 and 21
 #include <Wire.h>
@@ -8,9 +8,6 @@
 
 // Temperature & Humiditiy Sensor
 #include <DHT22.h>
-
-// FlyCam
-#include <Servo.h>
 
 // XBEE: uses Serial2 port on pins 16 and 17
 #include <XBee.h>
@@ -24,23 +21,17 @@
 // Temperature sensor
 #define DHT22_PIN            42
 
-// FlyCam
-#define FLYCAM_PWM_PIN       44
-
 // Ultrasonic Range Finder (forward-facing)
 #define MAXSONAR_ACTIVE_PIN  43
 #define MAXSONAR_PWM_PIN     45
 
-// Infrared range sensor (rear-racing)
+// Infrared range sensor (rear-facing)
 #define IR_RANGE_PIN         15
 
 float ir_sensor_value = 0;
 float rear_range_cm = 0;
 
 boolean debug = false;
-
-Servo myservo;  // create servo object to control a servo
-                // a maximum of eight servo objects can be created
  
 // notes in the melody:
 
@@ -97,7 +88,7 @@ float humidity_dht22 = 0;
 // The address of the remote XBee
 #define REMOTE_XBEE_ADDR     0x4256
 
-// Create an array for holding the data you want to send.
+// Char array of data being sent
 uint8_t payload[] = { 'H', 'i', ' ', '\n', '\r' };
 
 // 16-bit addressing: Enter address of remote XBee, typically the coordinator
@@ -116,7 +107,7 @@ uint8_t data = 0;
 // Timing
 
 unsigned long nextstatus_serial = 0;
-int status_interval_serial = 500;    // status interval in ms
+int status_interval_serial = 1000;    // status interval in ms
 
 unsigned long nextpoll_dht22 = 0;    // time of last poll
 int poll_interval_dht22 = 2500;      // poll interval in ms
@@ -173,10 +164,6 @@ void setup () {
   // Tell XBee to start Serial
   xbee.begin(9600);
 
-  // FlyCam
-  myservo.attach(FLYCAM_PWM_PIN);  // attaches the servo on pin 9 to the servo object
-  myservo.write(0);              // tell servo to go to position in variable 'pos'
-
   // Motors
   
   pinMode(statpin, OUTPUT);
@@ -203,9 +190,11 @@ void setup () {
   Serial1.println("EST serial");
   Serial1.println("LOG Rover startup!");
   
-  // Serial - XBee  
+  // Serial - USB serial console (debugging)
   Serial.begin(115200);
   Serial.println("Rover Multifunction Start!");
+
+  // Startup tune
   playMelody();
 
 }
@@ -294,7 +283,7 @@ void loop ()
 
   // Temperature and Humidity 
   if (debug) Serial.println("Reading temperature");
-  readTemperature();
+  // readTemperature();
   
   // Compass: heading, pitch, roll
   if (debug) Serial.println("Reading compass data");
@@ -340,6 +329,9 @@ void loop ()
       Serial.write(" ");
       Serial.println(data, DEC);
       Serial.println();
+
+      // Add data to list of packets received
+      // TODO xbeePacketsReceived[sizeof(xbeePacketsReceived)] = data;
     } else 
     
     if (xbee.getResponse().isError()) {
@@ -348,7 +340,6 @@ void loop ()
       // or flash error led
     } 
   }
-
   
   // Raspberry Pi input
   if (Serial1.available()) {
@@ -684,43 +675,34 @@ void readTemperature() {
       break;
       
     case DHT_ERROR_CHECKSUM:
-      Serial.print("check sum error ");
+      Serial.print("DHT check sum error ");
       Serial.print(myDHT22.getTemperatureC());
       Serial.print("C ");
       Serial.print(myDHT22.getHumidity());
       Serial.println("%");
       break;
     case DHT_BUS_HUNG:
-      Serial.println("BUS Hung ");
+      Serial.println("DHT BUS Hung ");
       break;
     case DHT_ERROR_NOT_PRESENT:
-      Serial.println("Not Present ");
+      Serial.println("DHT Not Present ");
       break;
     case DHT_ERROR_ACK_TOO_LONG:
-      Serial.println("ACK time out ");
+      Serial.println("DHT ACK time out ");
       break;
     case DHT_ERROR_SYNC_TIMEOUT:
-      Serial.println("Sync Timeout ");
+      Serial.println("DHT Sync Timeout ");
       break;
     case DHT_ERROR_DATA_TIMEOUT:
-      Serial.println("Data Timeout ");
+      Serial.println("DHT Data Timeout ");
       break;
     case DHT_ERROR_TOOQUICK:
-      Serial.println("Polled too quick ");
+      Serial.println("DHT Polled too quick ");
       break;
   }
   
   nextpoll_dht22 = millis() + poll_interval_dht22;
   
-}
-
-// FlyCam
-
-void FlyCamButton() {
-  Serial.println("Button");
-  myservo.write(180);              // tell servo to go to position in variable 'pos'
-  delay(250);
-  myservo.write(0);              // tell servo to go to position in variable 'pos'
 }
 
 // ***** MOTORS *******
@@ -835,110 +817,86 @@ void writeStatus() {
     
     // Write status to Serial
 
-  // You can now print variables latitude and longitude
-    // Define the variables that will be used
-  float gps_latitude, gps_longitude;
-  // Then call this function
-  gps.f_get_position(&gps_latitude, &gps_longitude);
+    // GPS position
+    float gps_latitude, gps_longitude;
+    gps.f_get_position(&gps_latitude, &gps_longitude);
   
-  // GPS date/time
-  int year;
-  byte month, day, hour, minutes, second, hundredths;
-  unsigned long fix_age;
+    // GPS date/time
+    int year;
+    byte month, day, hour, minutes, second, hundredths;
+    unsigned long fix_age;
  
-  gps.crack_datetime(&year, &month, &day, &hour, &minutes, &second, &hundredths, &fix_age);
+    gps.crack_datetime(&year, &month, &day, &hour, &minutes, &second, &hundredths, &fix_age);
   
-  Serial.print("Lat/Long: "); 
-  Serial.print(gps_latitude,5); 
-  Serial.print(", "); 
-  Serial.print(gps_longitude,5);
+    // Convert xbee data sent to string
+    /*
+    String xbeeDataSentString;
+    if (sizeof(XbeeDataSent) == 0) {
+      XbeeDataSentString = "none";
+    } else {
+      for (int i = 0; i > sizeof(XbeeDataSent); i++) {
+        XbeeDataSentStringString("\"") // Sends " character
+        XbeeDataSentStringString(XbeeDataSent[i])
+        XbeeDataSentStringString("\";") // Sends " and ; characters (not separated)
+      }
+    }
   
-  Serial.print("  ");
-  
-  // Here you can print the altitude and course values directly since 
-  // there is only one value for the function
-  Serial.print("Alt (m): "); Serial.print(gps.f_altitude());
-  Serial.print("  ");
-  // Same goes for course
-  Serial.print("Course (deg): "); Serial.print(gps.f_course());
-  Serial.print("  ");
-  
-  // And same goes for speed
-  Serial.print("Speed(kmph): "); Serial.print(gps.f_speed_kmph());
-  
-    // Range Finder, URF Front
-    Serial.print(" Fwd_Range=");
-    Serial.print(fwd_range_cm);
-        
-    // Range Finder, IR Rear
-    Serial.print(" Rear_Range=");
-    Serial.print(rear_range_cm);
-        
-    // Compass
-     Serial.print(" Heading=");             // Print the sensor readings to the serial port.
-    Serial.print(compass_heading);
+    // Convert xbee data received to string
+    if (sizeof(XbeeDataReceived) == 0) {
+      String XbeeDataReceivedString = "none";
+    }
+    */
     
-    Serial.print(" Pitch=");
-    Serial.print(compass_pitch);
-    
-    Serial.print(" Roll=");
-    Serial.print(compass_roll);
-
-    Serial.print(" TempC=");
-    Serial.print(temperature_dht22);
-    
-    Serial.print(" Humidity%=");
-    Serial.print(humidity_dht22);
-
-    // Motor speed
-    Serial.print(" Fwd_speed=");
-    Serial.print(forward_speed);
-
-    // Pi Shutdown
-    Serial.print(" Shutdown=");
-    Serial.print(shutdown_pi);
-
-    // Time
+    // Date/Time
     char timeStr[25];
     sprintf(timeStr, "%02d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minutes, second);
-    Serial.print(" Time=");
-    Serial.println(timeStr);
-
+    
     // *****************
 
-    // Rasperry Pi Serial
-    Serial1.print("GPS ");
-    Serial1.print(gps_latitude,5); 
-    Serial1.print(","); 
-    Serial1.print(gps_longitude,5);
-    Serial1.print(",");
-    Serial1.print(gps.f_altitude());
-    Serial1.print(",");
-    Serial1.print(gps.f_course());
-    Serial1.print(","); 
-    Serial1.print(gps.f_speed_kmph());
-    Serial1.print(","); 
-    Serial1.println(compass_heading);
+    String xbeeDataReceivedString;
     
-    Serial1.print("TIME ");
-    Serial1.println(timeStr);
-    
-    Serial1.print("SENSOR ");
-    Serial1.print(temperature_dht22);
-    Serial1.print(",");
-    Serial1.print(humidity_dht22);
-    Serial1.print(",");
-    Serial1.print(compass_pitch);
-    Serial1.print(",");
-    Serial1.print(compass_roll);
-    Serial1.print(",");
-    Serial1.print(fwd_range_cm);
-    Serial1.print(",");
-    Serial1.println(rear_range_cm);
-
-    if (shutdown_pi) {
-       Serial1.println("BREAK serial");
+    /*
+    for (int i = 0; i > sizeof(XbeeDataSent); i++) {
+      XbeeDataReceivedStringString("\"") // Sends " character
+      XbeeDataReceivedStringString(XbeeDataSent[i])
+      XbeeDataReceivedStringString("\";") // Sends " and ; characters (not separated)
     }
+    */
+
+    // Get other data to send
+    String otherData = "none"; // ***** PLACEHOLDER *****
+  
+    if (shutdown_pi) {
+       otherData = "CMD:SHUTDOWN";
+    }
+
+    String logMessage = "DATA "
+//      + String(timeStr) + " " +
+      + String(gps_latitude, 3) + " "
+      + String(gps_longitude, 3) + " "
+      + String(gps.f_altitude())+ " "
+      + String(gps.f_course()) + " "
+      + String(compass_heading) + " "
+      + String(gps.f_speed_kmph()) + " "
+      + String(year) + " "
+      + String(month) + " "
+      + String(day) + " "
+      + String(hour) + " "
+      + String(minutes) + " "
+      + String(second) + " "
+      + String(temperature_dht22) + " "
+      + String(humidity_dht22) + " "
+      + String(compass_pitch) + " "
+      + String(compass_roll) + " "
+      + String(fwd_range_cm) + " "
+      + String(rear_range_cm) + " "
+      + String(otherData);
+  
+     // USB debugging
+     Serial.println(logMessage);
+     
+     // RPi
+     Serial1.println(logMessage);
 
      nextstatus_serial = millis() + status_interval_serial;
   }

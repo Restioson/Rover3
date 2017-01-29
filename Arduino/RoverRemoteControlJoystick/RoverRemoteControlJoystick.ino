@@ -217,12 +217,12 @@ void loop ()
      switch (newDirection) {
      
        case FORWARD:
-            Serial.println("Go forward!");
+            Serial.println("Forward");
             sendCommand('W');
             break;
           
        case BACK:  
-            Serial.println("Go back!"); 
+            Serial.println("Back"); 
             sendCommand('S');
             break;
 
@@ -246,10 +246,11 @@ void loop ()
               Serial.println("Steer right!");
               sendCommand('D');
             }
+            sendCommand('A');
             break;
-     
+            
        case STOP:
-            Serial.println("STOP!"); 
+            Serial.println("STOP");
             sendCommand(' ');
             break;
             
@@ -269,9 +270,6 @@ void sendCommand(char cmd)
 {
   
   payload[0] = cmd;
-  Serial.print("Sending cmd: [");
-  Serial.print(cmd);
-  Serial.println("]");
   
   // 16-bit addressing: Enter address of remote XBee, typically the coordinator
   Tx16Request tx = Tx16Request(ROVER_XBEE_ADDR, payload, sizeof(payload));
@@ -290,19 +288,18 @@ void sendCommand(char cmd)
     	   // get the delivery status, the fifth byte
            if (txStatus.getStatus() == SUCCESS) {
             	// success.  time to celebrate
-                Serial.println("success!");
            } else {
             	// the remote XBee did not receive our packet. is it powered on?
-               Serial.println("did not receive packet");
+               Serial.println("Did not receive packet");
            }
         }      
       } else if (xbee.getResponse().isError()) {
-        Serial.print("error reading packet.  Error code: ");  
+        Serial.print("Error reading packet.  Error code: ");  
         Serial.println(xbee.getResponse().getErrorCode());
         // or flash error led
       } else {
         // local XBee did not provide a timely TX Status   Radio is not configured properly or connected
-        Serial.println("unknown error");
+        Serial.println("Unknown XBEE Error");
       }
 
   
