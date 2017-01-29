@@ -98,7 +98,7 @@ class SerialDataHandler():
                     try:
                         
                         #Sets the time according to GPS reading
-                        subprocess.check_call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(
+                        subprocess.check_call(["sudo", "date", "\"+%Y-%m-%d %T\"", "--set", "\"{0}-{1}-{2} {3}:{4}:{5}\"".format(
                             data["year"], 
                             data["month"], 
                             data["day"], 
