@@ -31,7 +31,7 @@ class SerialDataHandler():
     def connect_to_serial(self):
         
         #Initialise serial connection
-        self.serial = serial.Serial("/dev/ttyAMA0", 57600, timeout=1.5)
+        self.serial = serial.Serial("/dev/ttyS0", 57600, timeout=1.5)
         
         #Handshake
         self.serial.readline()
