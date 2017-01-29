@@ -33,9 +33,9 @@ class RequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self, logger):
         self.data = self.request.recv(1024)
+        self.logger.log("Got packet from IP client: \"{0}\"".format(str(self.data)), "INFO")
         
-        self.logger.log("Got packet from IP client: '{0}'".format(self.data), tag = "INFO")
-        
+        #Start streaming
         if self.data == "start":
             
             subprocess.call([
@@ -46,12 +46,24 @@ class RequestHandler(socketserver.BaseRequestHandler):
                 "--width", "640", 
                 "--height", "480", 
                 "--vflip", "on", 
-                "--framerate", "30", 
+                "--framerate", "25", 
                 "--server-option", "'--port=8080'",
-                "--server-option", "'--max-queued-connections=30'",
+                "--server-option", "'--max-queued-connections=5'",
                 "--server-option", "'--max-streams=5'",
-                "--server-option", "'--max-threads=40'"
+                "--server-option", "'--max-threads=20'"
              ])
+             
+            self.logger.log("Started UV4L streaming", "INFO")
         
+        #Stop UV4L stream
         elif self.data == "stop":
+            
             subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
+            self.logger.log("Stopped UV4l streaning", "INFO")
+        
+        #Invalid command
+        else:
+            
+            self.logger.log("Invalid command: \"{0}\"".format(str(self.data)), "WARN")
+            
+            

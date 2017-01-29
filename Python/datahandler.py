@@ -1,5 +1,12 @@
 #Handles data & serial from arduino
 
+
+#Imports
+import subprocess
+import sys
+import time
+
+#Handler class
 class SerialDataHandler():
     
     #Init
@@ -13,9 +20,14 @@ class SerialDataHandler():
         
         #Connect to serial
         try: 
+        
             connect_to_serial()
             self.logger.log("Connected to serial", "INFO")
-        except: self.serial = None
+            
+        except: 
+        
+            self.serial = None
+            self.logger.log("Could not connect to serial", "WARN")
     
     def connect_to_serial(self):
         
@@ -32,6 +44,9 @@ class SerialDataHandler():
         
         #Dictionary to store parsed data in
         data = {}
+        
+        #Header
+        data["serial-header"] = message.pop(0)
         
         #Parse telemetry data
         data["latitude"] = message.pop(0)
@@ -62,7 +77,7 @@ class SerialDataHandler():
         data["xbeeDataReceived"] = message.pop(0)
         data["xbeeDataSent"] = message.pop(0)
         
-        #Other data, e.g things the arudino process wants to get logged
+        #Other data, e.g command
         data["other"] = message.pop(0)
         
         return data
@@ -74,17 +89,45 @@ class SerialDataHandler():
         if self.serial:
             
             #Parse data
-            data = self.parse(self.serial.readline())
+            try:
+                
+                data_raw = str(self.serial.readline())
+                data = self.parse(data_raw)
+            
+            #Exception
+            except Exception as error:
+                
+                self.logger.log("Exception while parsing \"{0}\": \"{1}\"".format(data_raw, str(error.args)), "ERROR")
+                
 
             #Set time
             if not self.time_set:
                 
-                subprocess.call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(data["year"], data["month"], data["day"], data["hour"], data["minute"], data["second"])]) #Sets the time according to GPS reading
+                #Try set the system time to GPS time
+                try:
+                    
+                    #Sets the time according to GPS reading
+                    subprocess.check_call(["sudo", "date", "+%Y-%m-%d %T", "--set", "{0}-{1}-{2} {3}:{4}:{5}".format(
+                        data["year"], 
+                        data["month"], 
+                        data["day"], 
+                        data["hour"], 
+                        data["minute"], 
+                        data["second"]
+                        )])
+                    
+                    #Set variable tracking whether using gps time to true
+                    self.timeSet = True
                 
-                self.timeSet = True
+                    #Log
+                    self.logger.log("System time set to GPS time", "INFO")
                 
-                #Log
-                self.logger.log("System time set to GPS time", "INFO")
+                #Error
+                except Exception as error:
+                    
+                    #Log
+                    self.logger.log("Exception while setting system time: \"{0}\"".format(str(error.args)), "ERROR")
+                    
             
             #Create data log format
             log_message_format = "".join([
@@ -121,11 +164,23 @@ class SerialDataHandler():
             
             #Log
             self.logger.log(logmessage, "DATA")
+            
+            #Shutdown Pi
+            if data["other"] == "CMD:SHUTDOWN":
+                
+                self.logger.log("Received shutdown command, shutting down", "INFO")
+                
+                #Send halt command
+                subprocess.call(["sudo", "halt"])
+                
+                #Exit program
+                sys.exit(0)
         
         #Try connect to serial
         else:
             
             try: 
-                connect_to_serial()
+                time.sleep(2.5)
+                self.connect_to_serial()
                 self.logger.log("Connected to serial", "INFO")
-            except: pass
+            except Exception as error: self.logger.log("Failed to connect to serial: \"{0}\"".format(str(error.args)), "WARN")

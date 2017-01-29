@@ -3,7 +3,7 @@
 #Imports
 import os
 import datetime
-import gzip
+import lzma
 
 #Logger class   
 class Logger():
@@ -23,23 +23,28 @@ class Logger():
                 
                 for file_name in os.listdir(directory):  
                 
-                    if int(file_name.split(".")[0]) > highest:
-                        highest = int(file_name.split(".")[0])
+                    if len(file_name.split(".")) == 3:
+                        
+                        if file_name.split(".")[1] == "log" and file_name.split(".")[2] == "lzma":
+                        
+                            if int(file_name.split(".")[0]) > highest:
+                                highest = int(file_name.split(".")[0])
                         
             else:
                 os.makedirs(directory)
-                highest = 0
+                highest = -1
             
             #Set file_name
             self.file_name = datetime.datetime.now().strftime('{0}.log.gz'.format(str(highest+1)))
+            
         except:
-            self.file_name = "log.log.gz"
+            self.file_name = "0.log.lzma"
     
         #Create file path
         self.filepath = os.path.join(directory, self.file_name)
         
         #Create file object
-        self.file = gzip.GzipFile(self.filepath, "wb")
+        self.file = lzma.LZMAFile(self.filepath, "wb")
         
         #Begin log file
         self.file.write("{0} [{1}] Began logging to {2}\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO", self.filepath).encode("utf-8"))
@@ -47,12 +52,12 @@ class Logger():
         self.file.flush()
     
     #Logs to file
-    def log(self, message,  tag = "INFO", current_datetime = datetime.datetime.now()):
+    def log(self, message,  tag = "INFO"):
         
         if not self.closed:
             
             #Create header
-            header = current_datetime.strftime('[%Y-%m-%d_%H-%M-%S]')
+            header = datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]')
             
             #Create message
             message = "{0} [{1}] {2}\n".format(header, tag, message)
@@ -62,11 +67,13 @@ class Logger():
             self.file.flush()
             
         else:
-            raise Exception("Cannot write to a closed log file!")
+            
+            print("{0} [ERROR] Log file has been closed, but an attempt to log has been made!".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]')))
     
     
     #Closes the file
     def close(self):
         
+        self.log("Log file is being closed", "INFO")
         self.file.close()
         self.closed = True

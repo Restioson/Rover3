@@ -24,13 +24,15 @@ class CameraHandler():
         #Init camera
         self.camera = picamera.PiCamera()
         
+        self.logger.log("Camera powered on", "INFO")
+        
         #Set up camera
         self.camera.vflip = True
         self.camera.resolution = (1920, 1080)
         self.camera.framerate = 25
         
         #Log
-        self.logger.log("Camera switched on", "INFO")
+        self.logger.log("Camera handler started", "INFO")
         
         
     #Begins recording threads
@@ -51,10 +53,10 @@ class CameraHandler():
                 highest = 0
             
             #Set file_name
-            self.file_name = datetime.datetime.now().strftime('video{0}.h264'.format(str(highest + 1)))
+            self.file_name = datetime.datetime.now().strftime('{0}.h264'.format(str(highest + 1)))
             
         except:
-            self.file_name = "video.h264"
+            self.file_name = "0.h264"
     
         #Create file path
         self.filepath = os.path.join(directory, self.file_name)
@@ -78,17 +80,26 @@ class CameraHandler():
         #Loop
         while True:
             
+            #Attempt to flush and wait
             try:
+                
                 #Flush file
                 self.file.flush()
-            
+                
+                #Log
+                self.logger.log("Video file flushed", "INFO")
+                
                 #Sleep 1 second
                 time.sleep(1)
             
-            except:
+            #Break loop
+            except Exception as error:
+                
+                #Log and break
+                self.logger.log("Video flushing stopped: {0}".format(str(error.args)), "ERROR")
                 break
     
-    #Begins, waits for, and stops recording
+    #Begins, waits for 2h, and stops recording
     def wait_recording(self):
         
         #Begin recording
@@ -105,3 +116,12 @@ class CameraHandler():
         
         #Close file
         self.file.close()
+    
+        #Log
+        self.logger.log("Stopped recording as timer finished", "INFO")
+        
+    def stop_recording(self):
+        
+        #Stop recording
+        self.camera.stop_recording()
+        self.logger.log("Stopped recording explicitly")

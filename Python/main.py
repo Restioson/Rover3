@@ -29,7 +29,7 @@ class Main():
             self.logger = log.Logger("/home/pi/missiondata/log")
             
             #Initialise camera handler
-            self.camera_handler = camerahandler.CameraHandler(self.logger, directory = "/home/pi/missiondata/video")
+            self.camera_handler = camerahandler.CameraHandler(self.logger)
 
         
         #Initialise serial
@@ -39,7 +39,14 @@ class Main():
         self.ip_client_handler = clienthandler.IPClientHandler(self.logger)
         
         #Stop UV4L (if running)
-        subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
+        try:
+            
+            subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
+            self.logger.log("UV4L stopped", "INFO")
+        
+        except Exception as error:
+            
+            self.logger.log("Exception while attempting to stop UV4L: \"{0}\". UV4L may not be installed".format(str(error.args)), "WARN")
         
         #Begin videoing
         self.camera_handler.begin_recording()
@@ -53,13 +60,25 @@ class Main():
         while True:
             
             #Handle serial data
-            self.serial_data_handler.handle()  
+            try:
+                
+                self.serial_data_handler.handle()
+            
+            #Error!
+            except Exception as error:
+                
+                self.logger.log("Exception in main loop while handling serial data: \"{0}\"".format(str(error.args)), "ERROR")
         
 #Run program
 if __name__ == "__main__":
     
-    #Create mainclass object
-    main = Main()
+    #Create mainclass object and run mainloop
+    try:
+        
+        main = Main()
+        main.main_loop()
     
-    #main_loop
-    main.main_loop()
+    #Error
+    except Exception as error:
+        
+        print("Exception in initialisation: {0}".format(str(error.args)), flush = True)
