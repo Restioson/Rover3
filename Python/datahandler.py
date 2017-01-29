@@ -44,6 +44,9 @@ class SerialDataHandler():
         #Dictionary to store parsed data in
         data = {}
         
+        #Header
+        data["serial-header"] = message.pop(0)
+        
         #Parse telemetry data
         data["latitude"] = message.pop(0)
         data["longitude"] = message.pop(0)
