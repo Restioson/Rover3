@@ -123,57 +123,57 @@ class SerialDataHandler():
                         #Log
                         self.logger.log("Exception while setting system time: \"{0}\"".format(str(error.args)), "ERROR")
             
+                #Create data log format
+                log_message_format = "".join([
+                    "Latitude: {0}; ",
+                    "Longitude: {1}; ",
+                    "Altitude: {2}; ",
+                    "Course: {3}; ",
+                    "Heading: {4}; ",
+                    "Speed: {5}; ",
+                    "Temperature: {5}; ",
+                    "Humidity: {7}; ",
+                    "Pitch: {8}; ",
+                    "Roll: {9}; ",
+                    "ObjectDistanceFront: {10}; ",
+                    "ObjectDistanceBack: {11}; ",
+                    "Other: {12};\n"
+                ])
+            
+                #Create message
+                log_message = log_message_format.format(
+                    data["latitude"], 
+                    data["longitude"], 
+                    data["altitude"], 
+                    data["course"], 
+                    data["heading"], 
+                    data["speed"], 
+                    data["temperature"],
+                    data["humidity"], data["pitch"], 
+                    data["roll"], 
+                    data["objdistfront"], 
+                    data["objdistback"], 
+                    data["other"]
+                )
+                
+                #Log
+                self.logger.log(logmessage, "DATA")
+                
+                #Shutdown Pi
+                if data["other"] == "CMD:SHUTDOWN":
+                    
+                    self.logger.log("Received shutdown command, shutting down", "INFO")
+                    
+                    #Send halt command
+                    subprocess.call(["sudo", "halt"])
+                    
+                    #Exit program
+                    sys.exit(0)
+            
             #Exception
             except Exception as error:
                 
                 self.logger.log("Exception while parsing \"{0}\": \"{1}\"".format(data_raw, str(error.args)), "ERROR")                    
-            
-            #Create data log format
-            log_message_format = "".join([
-                "Latitude: {0}; ",
-                "Longitude: {1}; ",
-                "Altitude: {2}; ",
-                "Course: {3}; ",
-                "Heading: {4}; ",
-                "Speed: {5}; ",
-                "Temperature: {5}; ",
-                "Humidity: {7}; ",
-                "Pitch: {8}; ",
-                "Roll: {9}; ",
-                "ObjectDistanceFront: {10}; ",
-                "ObjectDistanceBack: {11}; ",
-                "Other: {12};\n"
-            ])
-        
-            #Create message
-            log_message = log_message_format.format(
-                data["latitude"], 
-                data["longitude"], 
-                data["altitude"], 
-                data["course"], 
-                data["heading"], 
-                data["speed"], 
-                data["temperature"],
-                data["humidity"], data["pitch"], 
-                data["roll"], 
-                data["objdistfront"], 
-                data["objdistback"], 
-                data["other"]
-            )
-            
-            #Log
-            self.logger.log(logmessage, "DATA")
-            
-            #Shutdown Pi
-            if data["other"] == "CMD:SHUTDOWN":
-                
-                self.logger.log("Received shutdown command, shutting down", "INFO")
-                
-                #Send halt command
-                subprocess.call(["sudo", "halt"])
-                
-                #Exit program
-                sys.exit(0)
         
         #Try connect to serial
         else:
