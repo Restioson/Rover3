@@ -53,7 +53,7 @@ class RequestHandler(socketserver.BaseRequestHandler):
                 "--server-option", "'--max-threads=20'"
              ])
              
-             self.logger.log("Started UV4L streaming", "INFO")
+            self.logger.log("Started UV4L streaming", "INFO")
         
         #Stop UV4L stream
         elif self.data == "stop":
