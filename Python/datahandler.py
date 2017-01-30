@@ -7,6 +7,7 @@ import sys
 import time
 import traceback
 import serial
+import datetime
 
 #Handler class
 class SerialDataHandler():
@@ -107,24 +108,21 @@ class SerialDataHandler():
                 #Try set the system time to GPS time
                 try:
                     
+                    #Check date is valid
                     if int(data["year"]) > 2000:
-                    
-                        #Sets the time according to GPS reading
-                        subprocess.check_call(["sudo", "date", "+%Y-%m-%d-%h:%m:%s", "--set", "{0}-{1}-{2}-{3}:{4}:{5}".format(
-                            data["year"], 
-                            data["month"], 
-                            data["day"], 
-                            data["hour"], 
-                            data["minute"], 
-                            data["second"]
-                            )])
                         
-                        #Set variable tracking whether using gps time to true
-                        self.timeSet = True
+                        #Create datetime object
+                        gps_datetime = datetime.datetime(data["year"], data["month"], data["day"], data["hour"], data["minute"], data["second"])
+                            
+                        #Sets the time according to GPS reading
+                        subprocess.check_call(["sudo", "date", "-s", "{0}".format(gps_datetime.strftime("'%Y/%m/%d %H:%M:%S'")])
                     
-                        #Log
-                        self.logger.log("System time set to GPS time", "INFO")
+                    #Set variable tracking whether using gps time to true
+                    self.timeSet = True
                 
+                    #Log
+                    self.logger.log("System time set to GPS time", "INFO")
+            
                 #Error
                 except:
                     
