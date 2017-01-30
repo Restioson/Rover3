@@ -4,6 +4,7 @@
 import os
 import datetime
 import lzma
+import traceback
 
 #Logger class   
 class Logger():
@@ -41,9 +42,10 @@ class Logger():
             #Set file_name
             self.file_name = datetime.datetime.now().strftime('{0}.log.lzma'.format(str(highest+1)))
             
-        except Exception as e:
-            error = e
+        except:
+            error = traceback.format_exc()
             self.file_name = "0.log.lzma"
+            
     
         #Create file path
         self.filepath = os.path.join(directory, self.file_name)
@@ -60,7 +62,9 @@ class Logger():
         #Error occured
         if error:
             
-            self.log("Exception while attempting to open log file: {0}".format(str(error.args)), "WARN")
+            self.log("Exception while attempting to open log file:", "WARN")
+            self.logger.log(traceback.format_exc(), "WARN")
+            self.logger.log("Is the flash drive mounted? Do we have write-access?", "WARN") 
     
     #Logs to file
     def log(self, message,  tag = "INFO"):

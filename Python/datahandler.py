@@ -5,6 +5,7 @@
 import subprocess
 import sys
 import time
+import traceback
 import serial
 
 #Handler class
@@ -44,9 +45,11 @@ class SerialDataHandler():
             return self.serial.readline() != b''
         
         #Error
-        except Exception as error:
+        except:
             
-            self.logger.log("Exception while attempting to connect to serial: \"{0}\". Is the port in use?".format(str(error.args)), "ERROR")
+            self.logger.log("Exception while attempting to connect to serial:".format(str(error.args)), "ERROR")
+            self.logger.log(traceback.format_exc(), "ERROR")
+            self.logger.log("Is the port in use?", "ERROR")
         
     def parse(self, data):
         
@@ -121,10 +124,12 @@ class SerialDataHandler():
                     self.logger.log("System time set to GPS time", "INFO")
                 
                 #Error
-                except Exception as error:
+                except:
                     
                     #Log
-                    self.logger.log("Exception while setting system time: \"{0}\"".format(str(error.args)), "ERROR")
+                    self.logger.log("Exception while setting system time:", "ERROR")
+                    self.logger.log(traceback.format_exc(), "ERROR")
+                    
         
             #Create data log format
             log_message_format = "".join([
@@ -174,15 +179,23 @@ class SerialDataHandler():
                 sys.exit(0)
         
         #Exception
-        except Exception as error:
+        except:
             
-            self.logger.log("Exception while parsing \"{0}\": \"{1}\"".format(data_raw, str(error.args)), "ERROR")                    
+            self.logger.log("Exception while parsing \"{0}\":".format(data_raw), "ERROR")
+            self.logger.log(traceback.format_exc())
+            self.logger.log("Bad packet?", "ERROR")              
         
         #Try connect to serial
         else:
             
             try: 
+            
                 time.sleep(2.5)
                 self.connect_to_serial()
                 self.logger.log("Connected to serial", "INFO")
-            except Exception as error: self.logger.log("Failed to connect to serial: \"{0}\"".format(str(error.args)), "WARN")
+                
+            except:
+                 
+                self.logger.log("Failed to connect to serial:", "WARN")
+                self.logger.log(traceback.format_exc(), "WARN")
+                self.logger.log("Is the Arduino started?", "WARN")

@@ -6,6 +6,7 @@ import picamera
 import time
 import threading
 import os
+import traceback
 
 #Camera handler class
 class CameraHandler():
@@ -59,10 +60,11 @@ class CameraHandler():
             #Set file_name
             self.file_name = datetime.datetime.now().strftime('{0}.h264'.format(str(highest + 1)))
             
-        except Exception as error:
+        except:
             
             self.file_name = "0.h264"
-            self.logger.log("Exception while attempting to begin camera recording: {0}".format(str(error.args)), "WARN")
+            self.logger.log("Exception while attempting to begin camera recording:", "WARN")
+            self.logger.log(traceback.format_exc(), "WARN")
     
         #Create file path
         self.filepath = os.path.join(directory, self.file_name)
@@ -101,10 +103,12 @@ class CameraHandler():
                 time.sleep(1)
             
             #Break loop
-            except Exception as error:
+            except:
                 
                 #Log and break
-                self.logger.log("Video flushing stopped: {0}".format(str(error.args)), "ERROR")
+                self.logger.log("Video flushing stopped:", "WARN")
+                self.logger.log(traceback.format_exc(), "WARN")
+                self.logger.log("Was the file closed?", "WARN")
                 break
     
     #Begins, waits for 2h, and stops recording

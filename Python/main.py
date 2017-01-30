@@ -6,6 +6,7 @@ import clienthandler
 import subprocess
 import threading
 import os
+import traceback
 
 #Main class
 class Main():
@@ -71,9 +72,10 @@ class Main():
                 self.serial_data_handler.handle()
             
             #Error!
-            except Exception as error:
+            except:
                 
-                self.logger.log("Exception in main loop while handling serial data: \"{0}\"".format(str(error.args)), "ERROR")
+                self.logger.log("Unhandled exception in main loop while handling serial data:", "ERROR")
+                self.logger.log(traceback.format_exc(), "ERROR")
         
 #Run program
 if __name__ == "__main__":
@@ -87,4 +89,5 @@ if __name__ == "__main__":
     #Error
     except Exception as error:
         
-        print("Exception in initialisation: {0}".format(str(error.args)), flush = True)
+        print("Unhandled Exception in initialisation:", flush = True)
+        print(traceback.format_exc())
