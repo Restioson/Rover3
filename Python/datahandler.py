@@ -99,7 +99,7 @@ class SerialDataHandler():
         #Parse data
         try:
             
-            data_raw = str(self.serial.readline()).replace("b", "", 1)
+            data_raw = str(self.serial.readline()).replace("b", "", 1).replace("\r\n", "")
             data = self.parse(data_raw)
             
             #Set time
@@ -139,7 +139,7 @@ class SerialDataHandler():
                 "Course: {3}; ",
                 "Heading: {4}; ",
                 "Speed: {5}; ",
-                "Temperature: {5}; ",
+                "Temperature: {6}; ",
                 "Humidity: {7}; ",
                 "Pitch: {8}; ",
                 "Roll: {9}; ",
