@@ -7,6 +7,7 @@ import time
 import threading
 import os
 import traceback
+import datetime
 
 #Camera handler class
 class CameraHandler():
@@ -58,7 +59,7 @@ class CameraHandler():
                 highest = -1
             
             #Set file_name
-            self.file_name = datetime.datetime.now().strftime('{0}.h264'.format(str(highest + 1)))
+            self.file_name = '{0}.h264'.format(str(highest + 1))
             
         except:
             
