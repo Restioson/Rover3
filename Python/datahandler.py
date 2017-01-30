@@ -182,7 +182,7 @@ class SerialDataHandler():
         except:
             
             self.logger.log("Exception while parsing \"{0}\":".format(data_raw), "ERROR")
-            self.logger.log(traceback.format_exc())
+            self.logger.log(traceback.format_exc(), "ERROR")
             self.logger.log("Bad packet?", "ERROR")              
         
         #Try connect to serial
