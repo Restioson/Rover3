@@ -55,9 +55,11 @@ class Main():
             subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
             self.logger.log("UV4L stopped", "INFO")
         
-        except Exception as error:
+        except Exception:
             
-            self.logger.log("Exception while attempting to stop UV4L: \"{0}\". UV4L may not be installed".format(str(error.args)), "WARN")
+            self.logger.log("Exception while attempting to stop UV4L:", "WARN")
+            self.logger.log(traceback.format_exc(), "WARN")
+            self.logger.log("Is UV4L installed?", "WARN")
         
         #Begin videoing
         self.camera_handler.begin_recording()
