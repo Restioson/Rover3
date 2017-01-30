@@ -19,24 +19,34 @@ class SerialDataHandler():
         #Logger
         self.logger = logger
         
-        #Connect to serial
-        try: 
+        #Log
+        self.logger.log("Serial data handler started", "INFO")
         
-            connect_to_serial()
-            self.logger.log("Connected to serial", "INFO")
-            
-        except: 
-        
-            self.serial = None
-            self.logger.log("Could not connect to serial", "WARN")
-    
     def connect_to_serial(self):
         
-        #Initialise serial connection
-        self.serial = serial.Serial("/dev/ttyAMA0", 57600, timeout=1.5)
+        try:
+            
+            #Initialise serial connection
+            self.serial = serial.Serial("/dev/ttyAMA0", 57600, timeout=1.5)
+            
+            #Handshake
+            self.serial.readline()
+            
+            #Read 1 line of data
+            data = self.serial.readline()
+            
+            #Log
+            if data != '': self.logger.log("Could not connect to serial", "WARN")
+            
+            else: self.logger.log("Connected to Arduino via /dev/ttyAMA0", "INFO")
+            
+            #Return whether serial connected
+            return self.serial.readline() != ''
         
-        #Handshake
-        self.serial.readline()
+        #Error
+        except Exception as error:
+            
+            self.logger.log("Exception while attempting to connect to serial: \"{0}\". Is the port in use?".format(str(error.args)), "ERROR")
         
     def parse(self, data):
         
@@ -82,94 +92,91 @@ class SerialDataHandler():
     
     def handle(self):
             
-        #Handle data if connected to serial
-        if self.serial:
+        #Parse data
+        try:
             
-            #Parse data
-            try:
-                
-                data_raw = str(self.serial.readline())
-                data = self.parse(data_raw)
-                
-                #Set time
-                if not self.time_set:
-                    
-                    #Try set the system time to GPS time
-                    try:
-                        
-                        #Sets the time according to GPS reading
-                        subprocess.check_call(["sudo", "date", "\"+%Y-%m-%d %T\"", "--set", "\"{0}-{1}-{2} {3}:{4}:{5}\"".format(
-                            data["year"], 
-                            data["month"], 
-                            data["day"], 
-                            data["hour"], 
-                            data["minute"], 
-                            data["second"]
-                            )])
-                        
-                        #Set variable tracking whether using gps time to true
-                        self.timeSet = True
-                    
-                        #Log
-                        self.logger.log("System time set to GPS time", "INFO")
-                    
-                    #Error
-                    except Exception as error:
-                        
-                        #Log
-                        self.logger.log("Exception while setting system time: \"{0}\"".format(str(error.args)), "ERROR")
+            data_raw = str(self.serial.readline())
+            data = self.parse(data_raw)
             
-                #Create data log format
-                log_message_format = "".join([
-                    "Latitude: {0}; ",
-                    "Longitude: {1}; ",
-                    "Altitude: {2}; ",
-                    "Course: {3}; ",
-                    "Heading: {4}; ",
-                    "Speed: {5}; ",
-                    "Temperature: {5}; ",
-                    "Humidity: {7}; ",
-                    "Pitch: {8}; ",
-                    "Roll: {9}; ",
-                    "ObjectDistanceFront: {10}; ",
-                    "ObjectDistanceBack: {11}; ",
-                    "Other: {12};\n"
-                ])
+            #Set time
+            if not self.time_set:
+                
+                #Try set the system time to GPS time
+                try:
+                    
+                    #Sets the time according to GPS reading
+                    subprocess.check_call(["sudo", "date", "\"+%Y-%m-%d %T\"", "--set", "\"{0}-{1}-{2} {3}:{4}:{5}\"".format(
+                        data["year"], 
+                        data["month"], 
+                        data["day"], 
+                        data["hour"], 
+                        data["minute"], 
+                        data["second"]
+                        )])
+                    
+                    #Set variable tracking whether using gps time to true
+                    self.timeSet = True
+                
+                    #Log
+                    self.logger.log("System time set to GPS time", "INFO")
+                
+                #Error
+                except Exception as error:
+                    
+                    #Log
+                    self.logger.log("Exception while setting system time: \"{0}\"".format(str(error.args)), "ERROR")
+        
+            #Create data log format
+            log_message_format = "".join([
+                "Latitude: {0}; ",
+                "Longitude: {1}; ",
+                "Altitude: {2}; ",
+                "Course: {3}; ",
+                "Heading: {4}; ",
+                "Speed: {5}; ",
+                "Temperature: {5}; ",
+                "Humidity: {7}; ",
+                "Pitch: {8}; ",
+                "Roll: {9}; ",
+                "ObjectDistanceFront: {10}; ",
+                "ObjectDistanceBack: {11}; ",
+                "Other: {12};\n"
+            ])
+        
+            #Create message
+            log_message = log_message_format.format(
+                data["latitude"], 
+                data["longitude"], 
+                data["altitude"], 
+                data["course"], 
+                data["heading"], 
+                data["speed"], 
+                data["temperature"],
+                data["humidity"], data["pitch"], 
+                data["roll"], 
+                data["objdistfront"], 
+                data["objdistback"], 
+                data["other"]
+            )
             
-                #Create message
-                log_message = log_message_format.format(
-                    data["latitude"], 
-                    data["longitude"], 
-                    data["altitude"], 
-                    data["course"], 
-                    data["heading"], 
-                    data["speed"], 
-                    data["temperature"],
-                    data["humidity"], data["pitch"], 
-                    data["roll"], 
-                    data["objdistfront"], 
-                    data["objdistback"], 
-                    data["other"]
-                )
-                
-                #Log
-                self.logger.log(log_message, "DATA")
-                
-                #Shutdown Pi
-                if data["other"] == "CMD:SHUTDOWN":
-                    
-                    self.logger.log("Received shutdown command, shutting down", "INFO")
-                    
-                    #Send halt command
-                    subprocess.call(["sudo", "halt"])
-                    
-                    #Exit program
-                    sys.exit(0)
+            #Log
+            self.logger.log(log_message, "DATA")
             
-            #Exception
-            except Exception as error:
+            #Shutdown Pi
+            if data["other"] == "CMD:SHUTDOWN":
                 
-                self.logger.log("Exception while parsing \"{0}\": \"{1}\"".format(data_raw, str(error.args)), "ERROR")                    
+                self.logger.log("Received shutdown command, shutting down", "INFO")
+                
+                #Send halt command
+                subprocess.call(["sudo", "halt"])
+                
+                #Exit program
+                sys.exit(0)
+        
+        #Exception
+        except Exception as error:
+            
+            self.logger.log("Exception while parsing \"{0}\": \"{1}\"".format(data_raw, str(error.args)), "ERROR")                    
         
         #Try connect to serial
         else:

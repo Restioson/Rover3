@@ -52,7 +52,13 @@ class Main():
         self.camera_handler.begin_recording()
         
         self.logger.log("Rover3 script initialised", "INFO")
-    
+        
+        #Block until connected to Arduino
+        while True: 
+        
+            if self.serial_data_handler.connect_to_serial(): break
+            time.sleep(5)
+        
     #Mainloop of program
     def main_loop(self):
         

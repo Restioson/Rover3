@@ -38,8 +38,10 @@ class CameraHandler():
     #Begins recording threads
     def begin_recording(self, directory = "/mnt/missiondata/video/"):
         
-        #Find highest video file number
+        #Initialise highest log file number
         highest = 0
+        
+        #Find highest video file number
         try:
             
             if os.path.isdir(directory):
@@ -47,17 +49,20 @@ class CameraHandler():
                 for file_name in os.listdir(directory):  
                 
                     if int(file_name.split(".")[0]) > highest:
+                        
                         highest = int(file_name.split(".")[0])
                         
             else:
                 os.makedirs(directory)
+                highest = -1
             
             #Set file_name
             self.file_name = datetime.datetime.now().strftime('{0}.h264'.format(str(highest + 1)))
             
         except Exception as error:
+            
             self.file_name = "0.h264"
-            self.logger.log("Error: {0}".format(str(error.args)), "WARN")
+            self.logger.log("Exception while attempting to begin camera recording: {0}".format(str(error.args)), "WARN")
     
         #Create file path
         self.filepath = os.path.join(directory, self.file_name)
@@ -74,6 +79,8 @@ class CameraHandler():
         self.flush_thread = threading.Thread(target = self.flush_thread)
         self.flush_thread.daemon = True
         self.flush_thread.start()
+        
+        self.logger.log("Camera began recording to \"{0}\"", "INFO")
     
     #Flushes recording file
     def flush_thread(self):
