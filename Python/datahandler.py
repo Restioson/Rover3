@@ -112,7 +112,7 @@ class SerialDataHandler():
                     if int(data["year"]) > 2000:
                         
                         #Create datetime object
-                        gps_datetime = datetime.datetime(data["year"], data["month"], data["day"], data["hour"], data["minute"], data["second"])
+                        gps_datetime = datetime.datetime(int(data["year"]), int(data["month"]), int(data["day"]), int(data["hour"]), int(data["minute"]), int(data["second"]))
                             
                         #Sets the time according to GPS reading
                         subprocess.check_call(["sudo", "date", "-s", "{0}".format(gps_datetime.strftime("'%Y/%m/%d %H:%M:%S'"))])
