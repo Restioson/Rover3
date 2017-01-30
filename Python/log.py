@@ -56,7 +56,7 @@ class Logger():
         self.uncompressed_file = open(os.path.join(directory, "current.log"), "w")
         
         #Begin log file
-        self.log("Began logging to {2}\n".format(self.filepath), "INFO")
+        self.log("Began logging to {0}\n".format(self.filepath), "INFO")
         self.log("Using system time; GPS time not acquired yet. Time may be inaccurate\n", "WARN")
         
         #Error occured
