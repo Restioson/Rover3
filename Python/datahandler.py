@@ -107,21 +107,23 @@ class SerialDataHandler():
                 #Try set the system time to GPS time
                 try:
                     
-                    #Sets the time according to GPS reading
-                    subprocess.check_call(["sudo", "date", "+'%Y-%m-%d %T'", "--set", "'{0}-{1}-{2} {3}:{4}:{5}'".format(
-                        data["year"], 
-                        data["month"], 
-                        data["day"], 
-                        data["hour"], 
-                        data["minute"], 
-                        data["second"]
-                        )])
+                    if int(data["year"]) > 2000:
                     
-                    #Set variable tracking whether using gps time to true
-                    self.timeSet = True
-                
-                    #Log
-                    self.logger.log("System time set to GPS time", "INFO")
+                        #Sets the time according to GPS reading
+                        subprocess.check_call(["sudo", "date", "+'%Y-%m-%d %T'", "--set", "'{0}-{1}-{2} {3}:{4}:{5}'".format(
+                            data["year"], 
+                            data["month"], 
+                            data["day"], 
+                            data["hour"], 
+                            data["minute"], 
+                            data["second"]
+                            )])
+                        
+                        #Set variable tracking whether using gps time to true
+                        self.timeSet = True
+                    
+                        #Log
+                        self.logger.log("System time set to GPS time", "INFO")
                 
                 #Error
                 except:
