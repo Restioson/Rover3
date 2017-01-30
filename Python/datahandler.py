@@ -184,18 +184,3 @@ class SerialDataHandler():
             self.logger.log("Exception while parsing \"{0}\":".format(data_raw), "ERROR")
             self.logger.log(traceback.format_exc(), "ERROR")
             self.logger.log("Bad packet?", "ERROR")              
-        
-        #Try connect to serial
-        else:
-            
-            try: 
-            
-                time.sleep(2.5)
-                self.connect_to_serial()
-                self.logger.log("Connected to serial", "INFO")
-                
-            except:
-                 
-                self.logger.log("Failed to connect to serial:", "WARN")
-                self.logger.log(traceback.format_exc(), "WARN")
-                self.logger.log("Is the Arduino started?", "WARN")
