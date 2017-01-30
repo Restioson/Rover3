@@ -36,12 +36,12 @@ class SerialDataHandler():
             data = self.serial.readline()
             
             #Log
-            if data != '': self.logger.log("Could not connect to serial", "WARN")
+            if data != b'': self.logger.log("Could not connect to serial", "WARN")
             
             else: self.logger.log("Connected to Arduino via /dev/ttyAMA0", "INFO")
             
             #Return whether serial connected
-            return self.serial.readline() != ''
+            return self.serial.readline() != b''
         
         #Error
         except Exception as error:
@@ -95,7 +95,7 @@ class SerialDataHandler():
         #Parse data
         try:
             
-            data_raw = str(self.serial.readline())
+            data_raw = str(self.serial.readline()).replace("b", "", 1)
             data = self.parse(data_raw)
             
             #Set time
