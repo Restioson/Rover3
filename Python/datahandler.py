@@ -115,7 +115,7 @@ class SerialDataHandler():
                         gps_datetime = datetime.datetime(data["year"], data["month"], data["day"], data["hour"], data["minute"], data["second"])
                             
                         #Sets the time according to GPS reading
-                        subprocess.check_call(["sudo", "date", "-s", "{0}".format(gps_datetime.strftime("'%Y/%m/%d %H:%M:%S'")])
+                        subprocess.check_call(["sudo", "date", "-s", "{0}".format(gps_datetime.strftime("'%Y/%m/%d %H:%M:%S'"))])
                     
                     #Set variable tracking whether using gps time to true
                     self.timeSet = True
