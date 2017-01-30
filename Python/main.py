@@ -7,12 +7,20 @@ import subprocess
 import threading
 import os
 import traceback
+import sys
 
 #Main class
 class Main():
     
     #Initialiser
     def __init__(self):
+        
+        #Check if root
+        if os.geteuid() != 0:
+            
+            #Print to stderr and exit
+            sys.stderr.write("Script must be run as root!\n")
+            sys.exit(1)
         
         #Check if usb is mounted
         if os.path.ismount("/mnt/missiondata"):
