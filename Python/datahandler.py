@@ -43,7 +43,7 @@ class SerialDataHandler():
             else: self.logger.log("Connected to Arduino via /dev/ttyAMA0", "INFO")
             
             #Return whether serial connected
-            return self.serial.readline() != b''
+            return data != b'' or data != ''
         
         #Error
         except:
