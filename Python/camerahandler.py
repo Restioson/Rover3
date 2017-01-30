@@ -82,7 +82,7 @@ class CameraHandler():
         self.flush_thread.daemon = True
         self.flush_thread.start()
         
-        self.logger.log("Camera began recording to \"{0}\"", "INFO")
+        self.logger.log("Camera began recording to \"{0}\"".format(self.filepath), "INFO")
     
     #Flushes recording file
     def flush_thread(self):

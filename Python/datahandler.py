@@ -37,7 +37,7 @@ class SerialDataHandler():
             data = self.serial.readline()
             
             #Log
-            if data != b'': self.logger.log("Could not connect to serial", "WARN")
+            if data != b'' or data != '': self.logger.log("Could not connect to serial", "WARN")
             
             else: self.logger.log("Connected to Arduino via /dev/ttyAMA0", "INFO")
             
