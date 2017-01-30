@@ -110,7 +110,7 @@ class SerialDataHandler():
                     if int(data["year"]) > 2000:
                     
                         #Sets the time according to GPS reading
-                        subprocess.check_call(["sudo", "date", "+%Y-%m-%d-%h:%m:%s", "--set", "'{0}-{1}-{2}-{3}:{4}:{5}'".format(
+                        subprocess.check_call(["sudo", "date", "+%Y-%m-%d-%h:%m:%s", "--set", "{0}-{1}-{2}-{3}:{4}:{5}".format(
                             data["year"], 
                             data["month"], 
                             data["day"], 
