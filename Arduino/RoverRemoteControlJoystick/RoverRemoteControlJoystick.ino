@@ -246,7 +246,6 @@ void loop ()
               Serial.println("Steer right!");
               sendCommand('D');
             }
-            sendCommand('A');
             break;
             
        case STOP:

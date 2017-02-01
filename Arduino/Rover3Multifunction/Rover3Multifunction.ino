@@ -787,7 +787,7 @@ void writeStatus() {
       + String(compass_roll) + " "
       + String(fwd_range_cm) + " "
       + String(rear_range_cm) + " "
-      + String(otherData);
+      + String(otherData) + " ";
   
      // USB debugging
      Serial.println(logMessage);
