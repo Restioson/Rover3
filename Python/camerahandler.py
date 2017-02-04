@@ -22,16 +22,7 @@ class CameraHandler():
         self.thread = None
         self.flush_thread = None
         self.logger = logger
-        
-        #Init camera
-        self.camera = picamera.PiCamera()
-        
-        self.logger.log("Camera powered on", "INFO")
-        
-        #Set up camera
-        self.camera.vflip = True
-        self.camera.resolution = (1920, 1080)
-        self.camera.framerate = 25
+        self.camera = None
         
         #Log
         self.logger.log("Camera handler started", "INFO")
@@ -40,7 +31,16 @@ class CameraHandler():
     #Begins recording threads
     def begin_recording(self, directory = "/mnt/missiondata/video/"):
         
-        #Initialise highest log file number
+        #Init camera
+        self.camera = picamera.PiCamera()
+        self.logger.log("Camera powered on", "INFO")
+        
+        #Set up camera
+        self.camera.vflip = True
+        self.camera.resolution = (1920, 1080)
+        self.camera.framerate = 25
+        
+        #Initialise highest video file number
         highest = 0
         
         #Find highest video file number
@@ -99,9 +99,6 @@ class CameraHandler():
                 
                 #Log
                 self.logger.log("Video file flushed", "INFO")
-                
-                #Sleep 1 second
-                time.sleep(1)
             
             #Break loop
             except:
@@ -110,11 +107,15 @@ class CameraHandler():
                 self.logger.log("Video flushing stopped:", "WARN")
                 self.logger.log(traceback.format_exc(), "WARN")
                 self.logger.log("Was the file closed?", "WARN")
+                
+                #Stop recording
+                self.stop_recording()
+                
                 break
     
     #Begins, waits for 2h, and stops recording
     def wait_recording(self):
-        
+
         #Begin recording
         self.camera.start_recording(self.file, format = "h264", quality = 25)
         
@@ -125,11 +126,8 @@ class CameraHandler():
         self.camera.wait_recording(2 * 60 * 60)
         
         #Stop recording
-        self.camera.stop_recording()
+        self.stop_recording()
         
-        #Close file
-        self.file.close()
-    
         #Log
         self.logger.log("Stopped recording as timer finished", "INFO")
         
@@ -137,4 +135,5 @@ class CameraHandler():
         
         #Stop recording
         self.camera.stop_recording()
-        self.logger.log("Stopped recording explicitly")
+        self.camera.close()
+        self.logger.log("Stopped recording explicitly", "INFO")
