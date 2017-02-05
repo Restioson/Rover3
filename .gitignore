@@ -102,15 +102,7 @@ instance/
 # Sphinx documentation
 docs/_build/
 
-# PyBuilder
-target/
-
-# IPython Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
+# PyBuilders
 # celery beat schedule file
 celerybeat-schedule
 
@@ -126,3 +118,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+#Rover ignores
+picamera.py

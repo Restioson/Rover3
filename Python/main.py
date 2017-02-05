@@ -44,7 +44,7 @@ class Main():
 
         
         #Initialise serial
-        self.serial_data_handler = datahandler.SerialDataHandler(self.logger)
+        self.serial_data_handler = datahandler.SerialDataHandler(self.logger, self)
         
         #Initialise IP client handler
         self.ip_client_handler = clienthandler.IPClientHandler(self.logger)
@@ -88,6 +88,48 @@ class Main():
                 
                 self.logger.log("Unhandled exception in main loop while handling serial data:", "ERROR")
                 self.logger.log(traceback.format_exc(), "ERROR")
+        
+    #Shutdown
+    def shutdown(self):
+        
+        #Log
+        self.logger.log("Shutting down...", "INFO")
+        
+        #Close camera
+        try: 
+            
+            #Stop recording
+            self.camera_handler.stop_recording()
+            
+            #Log
+            self.logger.log("Camera successfully shut down", "INFO")
+            
+        except:
+            
+            self.logger.log("Error while attempting to shut down camera", "ERROR")
+            self.logger.log(traceback.format_exc(), "ERROR")
+            
+        #Close log file
+        try: self.logger.close()
+        
+        except:
+            
+            self.logger.log("Error while attemtping to close log file", "ERROR")
+            self.logger.log(traceback.format_exc(), "ERROR")
+        
+        finally:
+            
+            print("Error while attemtping to close log file")
+            print(traceback.format_exc())
+        
+        #Send shutdown command
+        subprocess.call(["sudo", "halt"])
+        
+        #Exit process
+        sys.exit(0)
+        
+        
+        
         
 #Run program
 if __name__ == "__main__":
