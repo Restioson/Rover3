@@ -156,8 +156,7 @@ class SerialDataHandler():
             
             #Other
             else: self.logger.log("Bad packet: \"{0}\". Unimplemented serial packet?".format(data_raw), "WARN")
-            
-<<<<<<< HEAD
+
             #Shutdown Pi
             if data["other"] == "CMD:SHUTDOWN\r\n'":
                 
@@ -168,9 +167,7 @@ class SerialDataHandler():
                 
                 #Exit program
                 sys.exit(0)
-        
-=======
->>>>>>> 6f38c5004740ab2bd48a54357bddd5ccd08466cc
+
         #Exception
         except:
             
