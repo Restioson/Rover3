@@ -463,8 +463,8 @@ void pivotLeft(int power)
   Serial.print(power);
   Serial.print(" ...\n");
 
-  motorGo(0, CW, power);
-  motorGo(1, CCW, power);
+  motorGo(0, CCW, power);
+  motorGo(1, CW, power);
 
   // TODO
 }
@@ -477,8 +477,8 @@ void pivotRight(int power)
   Serial.print(power);
   Serial.print(" ...\n");
 
-  motorGo(0, CCW, power);
-  motorGo(1, CW, power);
+  motorGo(0, CW, power);
+  motorGo(1, CCW, power);
 
   // TODO
 }
