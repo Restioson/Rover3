@@ -115,8 +115,6 @@ int distance_slowdown = 150;
 int distance_rear_slowdown = 75;
 int speed_slow = 60;
 
-int shutdown_pi = 0;
-
 // This is where you declare prototypes for the functions that will be 
 // using the TinyGPS library.
 void getgps(TinyGPS &gps);
@@ -402,7 +400,7 @@ void loop ()
 
 void shutdownPi()
 {
-  shutdown_pi = 1;
+  writeCommand("SHUTDOWN");
 }
 
 void turnLeft(int power)
@@ -736,6 +734,20 @@ void readGPS() {
   }
 }
 
+// Write a command (to RPi)
+
+void writeCommand(String cmd) {
+ 
+   String cmdMessage = "CMD " + cmd;
+   
+   // USB debugging
+   Serial.println(cmdMessage);
+   
+   // RPi
+   Serial1.println(cmdMessage);
+  
+}
+
 // Output current status
 
 void writeStatus() {
@@ -763,10 +775,6 @@ void writeStatus() {
 
     // Get other data to send
     String otherData = "none"; // ***** PLACEHOLDER *****
-  
-    if (shutdown_pi) {
-       otherData = "CMD:SHUTDOWN";
-    }
 
     String logMessage = "DATA "
       + String(gps_latitude, 5) + " "
