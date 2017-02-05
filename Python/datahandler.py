@@ -41,21 +41,21 @@ class SerialDataHandler():
             data = self.serial.readline()
             
             #Log
-            if data == b'' or data == '': self.logger.log("Could not connect to serial", "WARN")
+            if data == b'': self.logger.log("Could not connect to serial", "WARN")
             
             else: self.logger.log("Connected to Arduino via /dev/ttyAMA0", "INFO")
             
             #Return whether serial connected
-            return data != b'' or data != ''
+            return data != b''
         
         #Error
         except:
             
-            self.logger.log("Exception while attempting to connect to serial:".format(str(error.args)), "ERROR")
+            self.logger.log("Exception while attempting to connect to serial:", "ERROR")
             self.logger.log(traceback.format_exc(), "ERROR")
             self.logger.log("Is the port in use?", "ERROR")
     
-    def handle_data(self, data):
+    def handle_data(self, message):
         
         #Dictionary to store parsed data in
         data = {}
@@ -123,18 +123,19 @@ class SerialDataHandler():
         self.logger.log(log_message, "DATA")
     
     #Handle commands
-    def handle_command(self, data):
+    def handle_command(self, message):
         
         #Handle
         
         #Shutdown
-        if data[0] == "SHUTDOWN": 
+        if message[0] == "SHUTDOWN": 
             
             #Log
             self.logger.log("Shutdown command received", "INFO")
             
             #Shut down
             self.main.shutdown()
+        print(message)
     
     #Handles incoming data
     def handle(self):
@@ -145,35 +146,30 @@ class SerialDataHandler():
             #Raw data
             data_raw = str(self.serial.readline())
             
+            #Remove unecessary quotes and b
+            message_raw = data_raw.replace("b", "", 1).replace("'", "", 1).replace("'", "", -1)
+            
             #Split message
-            message = data_raw.replace("b", "", 1).split()
+            message = message_raw.split(" ")
             
             #Data
-            if message[0] == "DATA": handle_data(message[1:])
+            if message[0] == "DATA": self.handle_data(message[1:])
             
             #CMD
-            elif message[0] == "CMD": handle_cmd(message[1:])
+            elif message[0] == "CMD": self.handle_command(message[1:])
             
             #Other
-            else: self.logger.log("Bad packet: \"{0}\". Unimplemented serial packet?".format(data_raw), "WARN")
-
-            #Shutdown Pi
-            if data["other"] == "CMD:SHUTDOWN\r\n'":
+            else: 
                 
-                self.logger.log("Received shutdown command, shutting down", "INFO")
-                
-                #Send halt command
-                subprocess.call(["sudo", "halt"])
-                
-                #Exit program
-                sys.exit(0)
-
+                #Log
+                self.logger.log("Bad packet: \"{0}\". Unimplemented serial packet?".format(message_raw), "WARN")
+                self.logger.log("Packet header: \"{0}\"".format(message[0]))
+            
         #Exception
         except:
             
             self.logger.log("Exception while parsing \"{0}\":".format(data_raw), "ERROR")
-            self.logger.log(traceback.format_exc(), "ERROR")
-            self.logger.log("Bad packet?", "ERROR")           
+            self.logger.log(traceback.format_exc(), "ERROR", newline = "")       
     
     #Sets time according to GPS
     def set_time(self, data):
@@ -201,4 +197,4 @@ class SerialDataHandler():
             
             #Log
             self.logger.log("Exception while setting system time:", "ERROR")
-            self.logger.log(traceback.format_exc(), "ERROR")
+            self.logger.log(traceback.format_exc(), "ERROR", newline = "")

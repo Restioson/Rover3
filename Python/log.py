@@ -23,52 +23,91 @@ class Logger():
         #Find highest log file number
         try:
             
-            if os.path.isdir(directory):
+            #Error happened?
+            error_happened = False
+                 
+            #Check if dir exists
+            if not os.path.isdir(directory): os.makedirs(directory)
                 
+            #Check if usb is mounted
+            if os.path.ismount("/mnt/missiondata"):
+                
+                #Iter through files
                 for file_name in os.listdir(directory):  
-                
-                    if len(file_name.split(".")) == 3:
                         
-                        if file_name.split(".")[1] == "log" and file_name.split(".")[2] == "lzma":
+                    #Check that file takes form of *.*
+                    if len(file_name.split(".")) == 2:
                         
-                            if int(file_name.split(".")[0]) > highest:
+                        #Check that file is log file 
+                        if file_name.split(".")[1] == "log":
+                            
+                            #Check that the filename is numerical
+                            if file_name.split(".")[0].isdigit():
+                            
+                                #Check if filename is bigger than highest
+                                if int(file_name.split(".")[0]) > highest:
+                                    
+                                    #If so, set highest to that
+                                    highest = int(file_name.split(".")[0])
                                 
-                                highest = int(file_name.split(".")[0])
-                        
+            #Not mount point: fall back to /home/pi/missiondata
             else:
-                os.makedirs(directory)
-                highest = -1
+                
+                #Fallback dir
+                directory = "/home/pi/missiondata/log"
+                
+                #Check if dir exists
+                if not os.path.isdir(directory): os.makedirs(directory)
+                
+                #Iter through files
+                for file_name in os.listdir(directory):  
+                    
+                    #Check that file takes form of *.*
+                    if len(file_name.split(".")) == 2:
+                        
+                        #Check that file is log file 
+                        if file_name.split(".")[1] == "log":
+                            
+                            
+                            #Check that the filename is numerical
+                            if file_name.split(".")[0].isdigit():
+                                
+                                #Check if filename is bigger than highest
+                                if int(file_name.split(".")[0]) > highest:
+                                    
+                                    #If so, set highest to that
+                                    highest = int(file_name.split(".")[0])
             
             #Set file_name
-            self.file_name = datetime.datetime.now().strftime('{0}.log.lzma'.format(str(highest+1)))
+            self.file_name = datetime.datetime.now().strftime('{0}.log'.format(str(highest+1)))
             
+        #Exception
         except:
-            error = traceback.format_exc()
-            self.file_name = "0.log.lzma"
             
-    
+            error_happened = True
+            error = traceback.format_exc()
+            self.file_name = "0.log"
+
         #Create file path
         self.filepath = os.path.join(directory, self.file_name)
         
         
         #Create file object
-        self.file = lzma.LZMAFile(self.filepath, "wb")
-        self.uncompressed_file = open(os.path.join(directory, "current.log"), "w")
+        self.file = open(self.filepath, "wb")
         
         #Begin log file
         self.log("Began logging to {0}".format(self.filepath), "INFO")
-        print("Began logging to {0}".format(self.filepath))
         self.log("Using system time; GPS time not acquired yet. Time may be inaccurate", "WARN")
         
         #Error occured
-        if error:
+        if error_happened:
             
             self.log("Exception while attempting to open log file:", "WARN")
-            self.logger.log(traceback.format_exc(), "WARN")
-            self.logger.log("Is the flash drive mounted? Do we have write-access?", "WARN") 
+            self.log(error, "WARN")
+            self.log("Is the flash drive mounted? Do we have write-access?", "WARN") 
     
     #Logs to file
-    def log(self, message,  tag = "INFO"):
+    def log(self, message,  tag = "INFO", newline = "\n"):
         
         if not self.closed:
             
@@ -76,17 +115,19 @@ class Logger():
             header = datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]')
             
             #Create message
-            message = "{0} [{1}] {2}\n".format(header, tag, message)
+            message_formatted = "{0} [{1}] {2}{3}".format(header, tag, message, newline)
         
             #Write message to file
-            self.file.write(message.encode("utf-8"))
+            self.file.write(message_formatted.encode("utf-8"))
             self.file.flush()
-            self.uncompressed_file.write(message)
-            self.uncompressed_file.flush()
+            
+            #Print to stdout
+            print("{0} [{1}] {2}".format(header, tag, message))
             
         else:
             
             print("{0} [ERROR] Log file has been closed, but an attempt to log has been made!".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]')))
+            return False
     
     
     #Closes the file
