@@ -168,7 +168,7 @@ class SerialDataHandler():
             self.logger.log(log_message, "DATA")
             
             #Shutdown Pi
-            if data["other"] == "CMD:SHUTDOWN":
+            if data["other"] == "CMD:SHUTDOWN\r\n'":
                 
                 self.logger.log("Received shutdown command, shutting down", "INFO")
                 

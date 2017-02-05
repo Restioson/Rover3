@@ -57,6 +57,7 @@ class Logger():
         
         #Begin log file
         self.log("Began logging to {0}".format(self.filepath), "INFO")
+        print("Began logging to {0}".format(self.filepath))
         self.log("Using system time; GPS time not acquired yet. Time may be inaccurate", "WARN")
         
         #Error occured
