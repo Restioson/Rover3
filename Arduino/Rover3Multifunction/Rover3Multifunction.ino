@@ -400,6 +400,7 @@ void loop ()
 
 void shutdownPi()
 {
+  tone(SPEAKER_PIN, NOTE_G4, 250);
   writeCommand("SHUTDOWN");
 }
 
@@ -738,7 +739,7 @@ void readGPS() {
 
 void writeCommand(String cmd) {
  
-   String cmdMessage = "CMD " + cmd;
+   String cmdMessage = "CMD " + cmd + " ";
    
    // USB debugging
    Serial.println(cmdMessage);
@@ -773,16 +774,13 @@ void writeStatus() {
     
     // *****************
 
-    // Get other data to send
-    String otherData = "none"; // ***** PLACEHOLDER *****
-
     String logMessage = "DATA "
-      + String(gps_latitude, 5) + " "
-      + String(gps_longitude, 5) + " "
-      + String(gps.f_altitude())+ " "
-      + String(gps.f_course()) + " "
-      + String(compass_heading) + " "
-      + String(gps.f_speed_kmph()) + " "
+      + String(gps_latitude, 6) + " "
+      + String(gps_longitude, 6) + " "
+      + String(gps.f_altitude(), 1)+ " "
+      + String(gps.f_course(), 2) + " "
+      + String(compass_heading, 1) + " "
+      + String(gps.f_speed_kmph(), 3) + " "
       + String(year) + " "
       + String(month) + " "
       + String(day) + " "
@@ -791,11 +789,10 @@ void writeStatus() {
       + String(second) + " "
       + "unknown "  // temperature
       + "unknown "  // humidity
-      + String(compass_pitch) + " "
-      + String(compass_roll) + " "
-      + String(fwd_range_cm) + " "
-      + String(rear_range_cm) + " "
-      + String(otherData) + " ";
+      + String(compass_pitch, 1) + " "
+      + String(compass_roll, 1) + " "
+      + String(fwd_range_cm, 1) + " "
+      + String(rear_range_cm, 1) + " ";
   
      // USB debugging
      Serial.println(logMessage);
