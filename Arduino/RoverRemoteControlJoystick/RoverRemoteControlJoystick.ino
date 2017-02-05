@@ -217,13 +217,23 @@ void loop ()
      switch (newDirection) {
      
        case FORWARD:
-            Serial.println("Forward");
-            sendCommand('W');
+            if (d4 == 0) {
+              Serial.println("Forward with sensor override");
+              sendCommand('O');
+            } else {
+              Serial.println("Forward");
+              sendCommand('W');
+            }
             break;
           
-       case BACK:  
-            Serial.println("Back"); 
-            sendCommand('S');
+       case BACK:
+            if (d4 == 0) {
+              Serial.println("Back with sensor override");
+              sendCommand('L');
+            } else {
+              Serial.println("Back");
+              sendCommand('S');
+            }
             break;
 
        case LEFT:

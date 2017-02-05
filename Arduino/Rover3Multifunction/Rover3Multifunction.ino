@@ -106,6 +106,8 @@ int errorLed = 5;
 
 boolean sonar_range = false;
 
+boolean range_override = false;
+
 int forward_speed = 0;
 int back_speed = 0;
 
@@ -202,7 +204,7 @@ void loop ()
           tone(SPEAKER_PIN, NOTE_B3, 10);
       } else
 
-      if ((fwd_range_cm <= distance_stop) && (forward_speed > 0)) {
+      if ((fwd_range_cm <= distance_stop) && (forward_speed > 0) && (!range_override)) {
           Serial.println("Too close, forward obstacle - STOPPING!");
           Serial.print("Speed: ");
           Serial.println(forward_speed);
@@ -242,7 +244,7 @@ void loop ()
   ir_sensor_value = analogRead(IR_RANGE_PIN);
   rear_range_cm = 10650.08 * pow(ir_sensor_value,-0.935) - 10;
  
-  if ((back_speed > 0) && (rear_range_cm < distance_stop)) {
+  if ((back_speed > 0) && (rear_range_cm < distance_stop) && (!range_override)) {
           Serial.println("Too close, rear obstacle - STOPPING!");
           Serial.print("Speed: ");
           Serial.println(back_speed);
@@ -340,25 +342,45 @@ void loop ()
       switch (data) {
         
       case 'W' :
+              range_override = false;
               if ((forward_speed == 0) && (fwd_range_cm > distance_stop)) {
                   forward_speed = 255;
+              } else {
+                  Serial.println("Too close - ignoring move forward command");
               }
               goForward(forward_speed);
               break;
       
       case 'S' : 
+              range_override = false;
               if (rear_range_cm > distance_stop) {
                   goBack(150);
               } else {
                   Serial.println("Too close - ignoring move back command");
               }
               break;
-     
-      case 'A' :   
+
+      case 'O' :
+              // Forward with override
+              range_override = true;
+              goForward(150);
+              Serial.println("Forward with sensor override");
+              break;
+
+      case 'L' :
+              // Back with override
+              range_override = true;
+              goBack(150);
+              Serial.println("Back with sensor override");
+              break;
+
+      case 'A' :
+              range_override = false;
               turnLeft(250);
               break;
      
       case 'D' :
+              range_override = false;
               turnRight(250);
               break;
         
@@ -371,7 +393,8 @@ void loop ()
               break;
 
       case ' ' :
-               stopMotors();
+              range_override = false;
+              stopMotors();
               break;
 
       case 'T' :
