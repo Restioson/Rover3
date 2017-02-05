@@ -13,13 +13,16 @@ import datetime
 class SerialDataHandler():
     
     #Init
-    def __init__(self, logger):
+    def __init__(self, logger, main):
         
         #Whether time is set to GPS UTC
         self.time_set = False
         
         #Logger
         self.logger = logger
+        
+        #Main
+        self.main = main
         
         #Log
         self.logger.log("Serial data handler started", "INFO")
@@ -51,17 +54,11 @@ class SerialDataHandler():
             self.logger.log("Exception while attempting to connect to serial:".format(str(error.args)), "ERROR")
             self.logger.log(traceback.format_exc(), "ERROR")
             self.logger.log("Is the port in use?", "ERROR")
-        
-    def parse(self, data):
-        
-        #Split message
-        message = data.split()
+    
+    def handle_data(self, data):
         
         #Dictionary to store parsed data in
         data = {}
-        
-        #Header
-        data["serial-header"] = message.pop(0)
         
         #Parse telemetry data
         data["latitude"] = message.pop(0)
@@ -88,85 +85,79 @@ class SerialDataHandler():
         data["objdistfront"] = message.pop(0)
         data["objdistback"] = message.pop(0)
         
-        #Other data, e.g command
-        data["other"] = message.pop(0)
-        
-        return data
-        
+        #Set time
+        if not self.time_set: self.set_time(data)
+                
+        #Create data log format
+        log_message_format = "".join([
+            "Latitude: {0}; ",
+            "Longitude: {1}; ",
+            "Altitude: {2}; ",
+            "Course: {3}; ",
+            "Heading: {4}; ",
+            "Speed: {5}; ",
+            "Temperature: {6}; ",
+            "Humidity: {7}; ",
+            "Pitch: {8}; ",
+            "Roll: {9}; ",
+            "ObjectDistanceFront: {10}; ",
+            "ObjectDistanceBack: {11};"
+        ])
     
+        #Create message
+        log_message = log_message_format.format(
+            data["latitude"], 
+            data["longitude"], 
+            data["altitude"], 
+            data["course"], 
+            data["heading"], 
+            data["speed"], 
+            data["temperature"],
+            data["humidity"], data["pitch"], 
+            data["roll"], 
+            data["objdistfront"], 
+            data["objdistback"], 
+        )
+        
+        #Log
+        self.logger.log(log_message, "DATA")
+    
+    #Handle commands
+    def handle_command(self, data):
+        
+        #Handle
+        
+        #Shutdown
+        if data[0] == "SHUTDOWN": 
+            
+            #Log
+            self.logger.log("Shutdown command received", "INFO")
+            
+            #Shut down
+            self.main.shutdown()
+    
+    #Handles incoming data
     def handle(self):
             
         #Parse data
         try:
             
-            data_raw = str(self.serial.readline()).replace("b", "", 1).replace("\r\n", "")
-            data = self.parse(data_raw)
+            #Raw data
+            data_raw = str(self.serial.readline())
             
-            #Set time
-            if not self.time_set:
-                
-                #Try set the system time to GPS time
-                try:
-                    
-                    #Check date is valid
-                    if int(data["year"]) > 2000:
-                        
-                        #Create datetime object
-                        gps_datetime = datetime.datetime(int(data["year"]), int(data["month"]), int(data["day"]), int(data["hour"]), int(data["minute"]), int(data["second"]))
-                            
-                        #Sets the time according to GPS reading
-                        subprocess.check_call(["sudo", "date", "--set", "{0}".format(gps_datetime.strftime("%Y-%m-%d %H:%M:%S"))])
-                    
-                    #Set variable tracking whether using gps time to true
-                    self.time_set = True
-                
-                    #Log
-                    self.logger.log("System time set to GPS time", "INFO")
+            #Split message
+            message = data_raw.replace("b", "", 1).split()
             
-                #Error
-                except:
-                    
-                    #Log
-                    self.logger.log("Exception while setting system time:", "ERROR")
-                    self.logger.log(traceback.format_exc(), "ERROR")
-                    
-        
-            #Create data log format
-            log_message_format = "".join([
-                "Latitude: {0}; ",
-                "Longitude: {1}; ",
-                "Altitude: {2}; ",
-                "Course: {3}; ",
-                "Heading: {4}; ",
-                "Speed: {5}; ",
-                "Temperature: {6}; ",
-                "Humidity: {7}; ",
-                "Pitch: {8}; ",
-                "Roll: {9}; ",
-                "ObjectDistanceFront: {10}; ",
-                "ObjectDistanceBack: {11}; ",
-                "Other: {12};\n"
-            ])
-        
-            #Create message
-            log_message = log_message_format.format(
-                data["latitude"], 
-                data["longitude"], 
-                data["altitude"], 
-                data["course"], 
-                data["heading"], 
-                data["speed"], 
-                data["temperature"],
-                data["humidity"], data["pitch"], 
-                data["roll"], 
-                data["objdistfront"], 
-                data["objdistback"], 
-                data["other"]
-            )
+            #Data
+            if message[0] == "DATA": handle_data(message[1:])
             
-            #Log
-            self.logger.log(log_message, "DATA")
+            #CMD
+            elif message[0] == "CMD": handle_cmd(message[1:])
             
+            #Other
+            else: self.logger.log("Bad packet: \"{0}\". Unimplemented serial packet?".format(data_raw), "WARN")
+            
+<<<<<<< HEAD
             #Shutdown Pi
             if data["other"] == "CMD:SHUTDOWN\r\n'":
                 
@@ -178,9 +169,39 @@ class SerialDataHandler():
                 #Exit program
                 sys.exit(0)
         
+=======
+>>>>>>> 6f38c5004740ab2bd48a54357bddd5ccd08466cc
         #Exception
         except:
             
             self.logger.log("Exception while parsing \"{0}\":".format(data_raw), "ERROR")
             self.logger.log(traceback.format_exc(), "ERROR")
-            self.logger.log("Bad packet?", "ERROR")              
+            self.logger.log("Bad packet?", "ERROR")           
+    
+    #Sets time according to GPS
+    def set_time(self, data):
+        
+        #Try set the system time to GPS time
+        try:
+            
+            #Check date is valid
+            if int(data["year"]) > 2000:
+                
+                #Create datetime object
+                gps_datetime = datetime.datetime(int(data["year"]), int(data["month"]), int(data["day"]), int(data["hour"]), int(data["minute"]), int(data["second"]))
+                    
+                #Sets the time according to GPS reading
+                subprocess.check_call(["sudo", "date", "--set", "{0}".format(gps_datetime.strftime("%Y-%m-%d %H:%M:%S"))])
+            
+            #Set variable tracking whether using gps time to true
+            self.time_set = True
+        
+            #Log
+            self.logger.log("System time set to GPS time", "INFO")
+        
+        #Error
+        except:
+            
+            #Log
+            self.logger.log("Exception while setting system time:", "ERROR")
+            self.logger.log(traceback.format_exc(), "ERROR")
