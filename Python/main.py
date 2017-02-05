@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 #Imports
 import log
 import datahandler
@@ -6,12 +7,22 @@ import clienthandler
 import subprocess
 import threading
 import os
+import traceback
+import sys
+import time
 
 #Main class
 class Main():
     
     #Initialiser
     def __init__(self):
+        
+        #Check if root
+        if os.geteuid() != 0:
+            
+            #Print to stderr and exit
+            sys.stderr.write("Script must be run as root!\n")
+            sys.exit(1)
         
         #Check if usb is mounted
         if os.path.ismount("/mnt/missiondata"):
@@ -44,15 +55,23 @@ class Main():
             subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
             self.logger.log("UV4L stopped", "INFO")
         
-        except Exception as error:
+        except Exception:
             
-            self.logger.log("Exception while attempting to stop UV4L: \"{0}\". UV4L may not be installed".format(str(error.args)), "WARN")
+            self.logger.log("Exception while attempting to stop UV4L:", "WARN")
+            self.logger.log(traceback.format_exc(), "WARN")
+            self.logger.log("Is UV4L installed?", "WARN")
         
         #Begin videoing
         self.camera_handler.begin_recording()
         
         self.logger.log("Rover3 script initialised", "INFO")
-    
+        
+        #Block until connected to Arduino
+        while True: 
+        
+            if self.serial_data_handler.connect_to_serial(): break
+            time.sleep(5)
+        
     #Mainloop of program
     def main_loop(self):
         
@@ -65,9 +84,10 @@ class Main():
                 self.serial_data_handler.handle()
             
             #Error!
-            except Exception as error:
+            except:
                 
-                self.logger.log("Exception in main loop while handling serial data: \"{0}\"".format(str(error.args)), "ERROR")
+                self.logger.log("Unhandled exception in main loop while handling serial data:", "ERROR")
+                self.logger.log(traceback.format_exc(), "ERROR")
         
 #Run program
 if __name__ == "__main__":
@@ -81,4 +101,5 @@ if __name__ == "__main__":
     #Error
     except Exception as error:
         
-        print("Exception in initialisation: {0}".format(str(error.args)), flush = True)
+        print("Unhandled Exception in initialisation:", flush = True)
+        print(traceback.format_exc())

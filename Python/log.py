@@ -4,6 +4,7 @@
 import os
 import datetime
 import lzma
+import traceback
 
 #Logger class   
 class Logger():
@@ -15,6 +16,9 @@ class Logger():
         
         #Initialise highest log file number starter value
         highest = 0
+        
+        #Error occured?
+        error = False
         
         #Find highest log file number
         try:
@@ -28,6 +32,7 @@ class Logger():
                         if file_name.split(".")[1] == "log" and file_name.split(".")[2] == "lzma":
                         
                             if int(file_name.split(".")[0]) > highest:
+                                
                                 highest = int(file_name.split(".")[0])
                         
             else:
@@ -35,25 +40,31 @@ class Logger():
                 highest = -1
             
             #Set file_name
-            self.file_name = datetime.datetime.now().strftime('{0}.log.gz'.format(str(highest+1)))
+            self.file_name = datetime.datetime.now().strftime('{0}.log.lzma'.format(str(highest+1)))
             
         except:
+            error = traceback.format_exc()
             self.file_name = "0.log.lzma"
+            
     
         #Create file path
         self.filepath = os.path.join(directory, self.file_name)
+        
         
         #Create file object
         self.file = lzma.LZMAFile(self.filepath, "wb")
         self.uncompressed_file = open(os.path.join(directory, "current.log"), "w")
         
         #Begin log file
-        self.file.write("{0} [{1}] Began logging to {2}\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO", self.filepath).encode("utf-8"))
-        self.uncompressed_file.write("{0} [{1}] Began logging to {2}\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO", self.filepath))
-        self.file.write("{0} [{1}] Using system time; GPS time not acquired yet. Time may be inaccurate\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO").encode("utf-8"))
-        self.uncompressed_file.write("{0} [{1}] Using system time; GPS time not acquired yet. Time may be inaccurate\n".format(datetime.datetime.now().strftime('[%Y-%m-%d_%H-%M-%S]'), "INFO"))
-        self.file.flush()
-        self.uncompressed_file.flush()
+        self.log("Began logging to {0}".format(self.filepath), "INFO")
+        self.log("Using system time; GPS time not acquired yet. Time may be inaccurate", "WARN")
+        
+        #Error occured
+        if error:
+            
+            self.log("Exception while attempting to open log file:", "WARN")
+            self.logger.log(traceback.format_exc(), "WARN")
+            self.logger.log("Is the flash drive mounted? Do we have write-access?", "WARN") 
     
     #Logs to file
     def log(self, message,  tag = "INFO"):

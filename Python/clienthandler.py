@@ -2,7 +2,6 @@
 
 
 #Imports
-
 try: import SocketServer as socketserver #Python 2
 except: import socketserver #Python 3
 
@@ -59,7 +58,7 @@ class RequestHandler(socketserver.BaseRequestHandler):
         elif self.data == "stop":
             
             subprocess.call(["/etc/init.d/uv4l_raspicam", "stop"])
-            self.logger.log("Stopped UV4l streaning", "INFO")
+            self.logger.log("Stopped UV4l streaming", "INFO")
         
         #Invalid command
         else:
