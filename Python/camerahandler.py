@@ -43,23 +43,62 @@ class CameraHandler():
         #Initialise highest video file number
         highest = 0
         
-        #Find highest video file number
+        #Find highest log file number
         try:
-            
-            if os.path.isdir(directory):
+                 
+            #Check if dir exists
+            if not os.path.isdir(directory): os.makedirs(directory)
                 
+            #Check if usb is mounted
+            if os.path.ismount("/mnt/missiondata"):
+                
+                #Iter through files
                 for file_name in os.listdir(directory):  
-                
-                    if int(file_name.split(".")[0]) > highest:
+                    
+                    #Check that file takes form of *.*
+                    if len(file_name.split(".")) == 2:
                         
-                        highest = int(file_name.split(".")[0])
-                        
+                        #Check that file is log file 
+                        if file_name.split(".")[1] == "h264":
+                            
+                            #Check that the filename is numerical
+                            if file_name.split(".")[0].isdigit():
+                            
+                                #Check if filename is bigger than highest
+                                if int(file_name.split(".")[0]) > highest:
+                                    
+                                    #If so, set highest to that
+                                    highest = int(file_name.split(".")[0])
+                                
+            #Not mount point: fall back to /home/pi/missiondata
             else:
-                os.makedirs(directory)
-                highest = -1
+                
+                #Fallback dir
+                directory = "/home/pi/missiondata/video"
+                
+                #Check if dir exists
+                if not os.path.isdir(directory): os.makedirs(directory)
+                
+                #Iter through files
+                for file_name in os.listdir(directory):  
+                    
+                    #Check that file takes form of *.*
+                    if len(file_name.split(".")) == 2:
+                        
+                        #Check that file is log file 
+                        if file_name.split(".")[1] == "h264":
+                            
+                            #Check that the filename is numerical
+                            if file_name.split(".")[0].isdigit():
+                                
+                                #Check if filename is bigger than highest
+                                if int(file_name.split(".")[0]) > highest:
+                                    
+                                    #If so, set highest to that
+                                    highest = int(file_name.split(".")[0])
             
             #Set file_name
-            self.file_name = '{0}.h264'.format(str(highest + 1))
+            self.file_name = datetime.datetime.now().strftime('{0}.h264'.format(str(highest+1)))
             
         except:
             
@@ -122,14 +161,8 @@ class CameraHandler():
         #Let camera warm up
         time.sleep(2)
         
-        #Wait for recording to finish
-        self.camera.wait_recording(2 * 60 * 60)
-        
-        #Stop recording
-        self.stop_recording()
-        
-        #Log
-        self.logger.log("Stopped recording as timer finished", "INFO")
+        #Record
+        while 1: self.camera.wait_recording(2 * 60 * 60)
         
     def stop_recording(self):
         

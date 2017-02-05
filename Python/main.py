@@ -87,7 +87,7 @@ class Main():
             except:
                 
                 self.logger.log("Unhandled exception in main loop while handling serial data:", "ERROR")
-                self.logger.log(traceback.format_exc(), "ERROR")
+                self.logger.log(traceback.format_exc(), "ERROR", newline = "")
         
     #Shutdown
     def shutdown(self):
@@ -106,21 +106,21 @@ class Main():
             
         except:
             
-            self.logger.log("Error while attempting to shut down camera", "ERROR")
-            self.logger.log(traceback.format_exc(), "ERROR")
+            self.logger.log("Error while attempting to shut down camera:", "ERROR")
+            self.logger.log(traceback.format_exc(), "ERROR", newline = "")
             
         #Close log file
         try: self.logger.close()
         
         except:
             
-            self.logger.log("Error while attemtping to close log file", "ERROR")
-            self.logger.log(traceback.format_exc(), "ERROR")
-        
-        finally:
+            self.logger.log("Error while attemtping to close log file:", "ERROR")
+            log_attempt =self.logger.log(traceback.format_exc(), "ERROR", newline = "")
             
-            print("Error while attemtping to close log file")
-            print(traceback.format_exc())
+            if log_attempt == False:
+                
+                print("Error while attemtping to close log file:")
+                print(traceback.format_exc(), end = "")
         
         #Send shutdown command
         subprocess.call(["sudo", "halt"])
