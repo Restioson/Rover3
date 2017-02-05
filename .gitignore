@@ -121,3 +121,6 @@ ENV/
 
 #Rover ignores
 picamera.py
+test/testvideo.*
+test/timecodes.txt
+
