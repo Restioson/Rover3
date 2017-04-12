@@ -3,7 +3,6 @@
 #Imports
 import os
 import datetime
-import lzma
 import traceback
 
 #Logger class   
