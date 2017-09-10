@@ -9,6 +9,7 @@ install:
     - sudo apt-get install socat
 
 script:
+    - cd Rust/pi
     - sudo socat /dev/ttyAMA0 /dev/ttyAMA1
     - cargo build --verbose --all
     - cargo test --verbose --all
