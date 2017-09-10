@@ -8,7 +8,7 @@ rust:
     - nightly
 
 install:
-    - pt-get install socat
+    - apt-get install socat
 
 script:
     - cd Rust/pi
