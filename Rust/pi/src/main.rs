@@ -140,10 +140,10 @@ mod test {
         config.serial.port = self::PORT.to_string();
 
         // Sanity check: check port is not open and exists
-        if let Ok(port) = serial::open(&config.serial.port) {
-            drop(port);
-        } else {
-            panic!("Device in use or nonexistent, sanity check failed!")
+
+        match serial::open(&config.serial.port) {
+            Ok(port) => drop(port),
+            Err(error) => panic!(format!("Sanity check failed: \"{}\"", error))
         }
 
         let mut port = setup_serial_port(&config).unwrap();
