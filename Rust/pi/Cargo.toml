@@ -1,0 +1,15 @@
+[package]
+name = "rover3_pi"
+version = "0.1.0"
+authors = ["Restioson <restiosondev@gmail.com>"]
+
+[dependencies]
+serial = "^0.4"
+log = "^0.3.8"
+log4rs = "^0.7.0"
+serde = "^1.0.14"
+serde_derive = "^1.0.14"
+toml = "^0.4"
+
+[target.arm-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"
