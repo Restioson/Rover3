@@ -1,16 +1,18 @@
 language: rust
 
+sudo: true
+
 rust:
     - stable
     - beta
     - nightly
 
 install:
-    - sudo apt-get install socat
+    - pt-get install socat
 
 script:
     - cd Rust/pi
-    - sudo socat /dev/ptyS10 /dev/ptyS11
+    - socat /dev/ptyS10 /dev/ptyS11
     - ls /dev/
     - cargo build --verbose --all
-    - sudo cargo test --verbose --all
+    - cargo test --verbose --all
