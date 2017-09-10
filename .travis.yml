@@ -10,7 +10,7 @@ install:
 
 script:
     - cd Rust/pi
-    - socat /dev/ptyS10 /dev/ptyS11
+    - sudo socat /dev/ptyS10 /dev/ptyS11
     - ls /dev/
     - cargo build --verbose --all
-    - cargo test --verbose --all
+    - sudo cargo test --verbose --all
