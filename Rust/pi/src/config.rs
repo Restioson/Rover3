@@ -75,7 +75,7 @@ impl Config {
                             return Err(ConfigReadError::IoError(error));
                         }
 
-                        debug!("Deserialising...");
+                        debug!("Deserializing...");
                         return match toml::from_slice(buf.as_slice()) {
                             Ok(config) => Ok(config),
                             Err(error) => Err(ConfigReadError::TomlError(error)),

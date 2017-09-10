@@ -29,6 +29,7 @@ mod config;
 
 use std::thread;
 use serial::prelude::*;
+use serial::PortSettings;
 use config::Config;
 
 fn main() {
@@ -104,14 +105,12 @@ fn setup_serial_port(config: &Config) -> Result<Box<SerialPort>, serial::Error> 
 
         port.set_timeout(config.serial.timeout)?;
 
-        port.reconfigure(&|settings| {
-            // TODO use configure()
-            settings.set_baud_rate(config.serial.baud)?;
-            settings.set_char_size(config.serial.char_size);
-            settings.set_parity(config.serial.parity);
-            settings.set_stop_bits(config.serial.stop_bits);
-            settings.set_flow_control(config.serial.flow_control);
-            Ok(())
+        port.configure(&PortSettings {
+            baud_rate: config.serial.baud,
+            char_size: config.serial.char_size,
+            parity: config.serial.parity,
+            stop_bits: config.serial.stop_bits,
+            flow_control: config.serial.flow_control,
         })?;
 
         break Ok(port);
@@ -132,6 +131,8 @@ mod test {
     #[cfg(not(target_os = "windows"))]
     const PORT: &'static str = "/dev/ptyS10"; // For mocking, one option is socat
 
+    // Check that setup_serial_port actually uses the config it is passed
+    // This whole test is something of a sanity check
     #[test]
     fn setup_serial_port_obeys_config() {
 

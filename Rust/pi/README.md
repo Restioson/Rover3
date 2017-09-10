@@ -1,0 +1,1 @@
+A Rust port of the Pi side of the Rover project, aimed to be safe and performant. More info in doc comments
