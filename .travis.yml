@@ -10,8 +10,8 @@ install:
 
 script:
     - cd Rust/pi
-    - sudo socat /dev/ptyS10 /dev/ptyS11
-    - sudo chown travis:travis /dev/ptyS10
+    - sudo socat PTY,link=/dev/ptyS10 PTY,link=/dev/ptyS11 &
+    - sudo chown travis:$travis /dev/ptyS10
     - sudo chown travis:travis /dev/ptyS11
     - ls /dev/
     - cargo build --verbose --all
