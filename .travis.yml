@@ -11,5 +11,6 @@ install:
 script:
     - cd Rust/pi
     - sudo socat /dev/ptyS10 /dev/ptyS11
+    - ls /dev/
     - cargo build --verbose --all
     - cargo test --verbose --all
