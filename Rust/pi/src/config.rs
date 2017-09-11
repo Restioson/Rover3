@@ -7,100 +7,127 @@ use std::fs::File;
 use std::io::Read;
 use toml;
 use serial::*;
-use log::LogLevel;
 
 /// A struct representing the configuration for the rover
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Config {
+    /// The logging config
     pub logging: LoggingConfig,
+
+    /// The serial config
     pub serial: SerialConfig,
 }
 
 /// A struct representing the logging configuration for the Rover
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct LoggingConfig {
-    /// The path to the log4rs configuration file
-    pub config_path: String,
+    /// The directory to write log files to
+    pub directory: String,
 
-    /// The maximum log level
-    #[serde(with = "LogLevelDef")]
-    pub level: LogLevel, // TODO
+    /// If the first-choice for directory is not available, log to the second
+    pub fallback_directory: String,
+
+    /// The log4rs encoder pattern
+    pub pattern: String,
+
+    /// The filename for the log -- the iso datetime will be added to the end
+    pub filename: String,
 }
 
+/// Configuration for the serial port
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct SerialConfig {
-    /// The serial port path/name. Can be a path, such as `/dev/tty...` or a name, such as `COM...`
+    /// The serial port path/name. Can be a path, such as `/dev/tty...` or a name,
+    /// such as `COM...`
     pub port: String,
 
+    /// The serial character size
     #[serde(with = "CharSizeDef")]
     pub char_size: CharSize,
+
+    /// The serial parity
     #[serde(with = "ParityDef")]
     pub parity: Parity,
+
+    /// The number of serial stop bits
     #[serde(with = "StopBitsDef")]
     pub stop_bits: StopBits,
+
+    /// The serial flow control style
     #[serde(with = "FlowControlDef")]
     pub flow_control: FlowControl,
+
+    /// The serial baudrate
     #[serde(with = "BaudRateDef")]
     pub baud: BaudRate,
 
-    /// The retry delay for connecting to serial. When failed to connect to serial, this delay will
-    /// be waited
+    /// The retry delay for connecting to serial. When failed to connect to
+    /// serial, this delay will be waited
     pub retry_delay: time::Duration,
+
+    /// The serial timeout -- after an operation takes longer than the timeout
+    /// value it will be terminated
     pub timeout: time::Duration,
 }
 
 impl Config {
-    /// Searches for the config file in the specified directories, prioritising the directories
-    /// nearer to the beginning
+    /// Searches for the config file in the specified directories, prioritising
+    /// the directories nearer to the beginning
     pub fn search_and_parse(
         name: &'static str,
         directories: &[&'static str],
     ) -> std::result::Result<Config, ConfigReadError> {
 
-        info!("Searching for configuration file named \"{}\"", name);
+        // Search every directory in the directories slice...
+        println!("Searching for configuration file named \"{}\"", name);
         for directory in directories.iter() {
 
+            // Join the directory and the config file name
             let path = Path::new(directory).join(name);
-            debug!("Searching \"{}\"", directory);
+            println!("Searching \"{}\"", directory);
 
             if path.exists() {
-                info!("Found \"{}\" in \"{}\"", name, directory);
+                println!("Found \"{}\" in \"{}\"", name, directory);
 
+                // Open the file, and attempt to read and deserialize it
                 match File::open(&path) {
                     Ok(mut file) => {
-                        debug!("Reading file...");
+
+                        // Attempt to read the file
+                        println!("Reading file...");
                         let mut buf = Vec::new();
 
                         if let Err(error) = file.read_to_end(&mut buf) {
                             return Err(ConfigReadError::IoError(error));
                         }
 
-                        debug!("Deserializing...");
-                        return match toml::from_slice(buf.as_slice()) {
-                            Ok(config) => Ok(config),
-                            Err(error) => Err(ConfigReadError::TomlError(error)),
-                        };
+                        // Attempt to deserialise the file
+                        println!("Deserializing...");
+                        return toml::from_slice(buf.as_slice()).map_err(ConfigReadError::TomlError);
                     }
 
+                    // In the event of an error reading the file, skip it
                     Err(error) => {
-                        warn!(
+                        println!(
                             "Error reading config file \"{}\": \"{}\"",
                             path.to_string_lossy(),
                             error
                         );
-                        warn!("Skipping...");
+                        println!("Skipping...");
                     }
                 }
             } else {
-                debug!("\"{}\" not found in \"{}\"", name, directory);
+                println!("\"{}\" not found in \"{}\"", name, directory);
             }
         }
 
-        warn!("Config file not found!");
+        println!("Config file not found!");
         Err(ConfigReadError::NotFound)
     }
 }
 
+/// In the event of an error reading the config file, this will be
+/// returned
 #[derive(Debug)]
 pub enum ConfigReadError {
     TomlError(toml::de::Error),
@@ -112,8 +139,10 @@ impl Default for Config {
     fn default() -> Config {
         Config {
             logging: LoggingConfig {
-                config_path: "log4rs.yml".to_string(),
-                level: LogLevel::Info,
+                directory: "/mnt/missiondata/log/".to_string(),
+                fallback_directory: "log/".to_string(),
+                pattern: "{d} {h({l})} - {m}{n}".to_string(),
+                filename: "rover".to_string(),
             },
 
             serial: SerialConfig {
@@ -209,18 +238,6 @@ pub enum FlowControlDef {
     FlowHardware,
 }
 
-#[allow(dead_code)]
-#[derive(Serialize, Deserialize)]
-#[serde(remote = "LogLevel")]
-#[serde(rename_all = "snake_case")]
-pub enum LogLevelDef {
-    Error = 1,
-    Warn,
-    Info,
-    Debug,
-    Trace,
-}
-
 #[cfg(test)]
 mod test {
 
@@ -232,8 +249,10 @@ mod test {
 
         let config_toml = r#"
             [logging]
-            config_path = "log4rs.yml"
-            level = "info"
+            directory = "/mnt/missiondata/log/"
+            fallback_directory = "log/"
+            pattern = "{d} {h({l})} - {m}{n}"
+            filename = "rover"
 
             [serial]
             port = "/dev/ttyAMA0"
@@ -254,8 +273,10 @@ mod test {
 
         let config_struct = Config {
             logging: LoggingConfig {
-                config_path: "log4rs.yml".to_string(),
-                level: LogLevel::Info,
+                directory: "/mnt/missiondata/log/".to_string(),
+                fallback_directory: "log/".to_string(),
+                pattern: "{d} {h({l})} - {m}{n}".to_string(),
+                filename: "rover".to_string(),
             },
 
             serial: SerialConfig {
