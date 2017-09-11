@@ -6,17 +6,16 @@ use serial;
 use serial::prelude::*;
 use serial::PortSettings;
 use chrono::Local;
+use log;
 use log4rs;
+use log4rs::config::{Appender, Root};
 use log4rs::append::console::ConsoleAppender;
 use log4rs::encode::pattern::PatternEncoder;
 use log4rs::append::file::FileAppender;
-use log4rs::config::Appender;
-use log4rs::config::Root;
-use log::LogLevelFilter;
 use config::Config;
 
 // TODO test
-/// Sets up logging
+/// Sets up logging with log4rs
 ///
 /// Programatically creates a logging config and sets values according to config.
 /// If the first choice for logging directory (`directory` key in config) is not
@@ -26,9 +25,10 @@ use config::Config;
 ///
 /// # Panicking
 ///
-/// Panicks if there is an error setting up the logger (`logger_config.build`),
-/// or setting the logger (`init`)
-// TODO don't panic!
+/// Panics:
+///     - if there is an error building the config (the config is invalid)
+///     - if there is an error setting the logger (the logger is already set)
+///
 pub fn logging(config: &Config) {
 
     // Build the standard output appender
@@ -86,12 +86,15 @@ pub fn logging(config: &Config) {
 
     // Finish building the logger config
     let logger_config = logger_config_builder
-        .build(root.build(LogLevelFilter::Debug))
-        .expect("Error setting up logger (logger_config.build)!");
+        .build(root.build(log::LogLevelFilter::Debug))
+        .expect(
+            "Error building config -- this is a bug! Is the config invalid?",
+        );
 
     // Initialise logging
-    log4rs::init_config(logger_config).expect("Error setting up logger (init_config)!");
-
+    log4rs::init_config(logger_config).expect(
+        "Error setting logger -- this is a bug! Has the logger already been set?",
+    );
 }
 
 /// Set up the serial port

@@ -21,9 +21,9 @@
 #[macro_use]
 extern crate log;
 extern crate log4rs;
-extern crate serial;
 extern crate toml;
 extern crate chrono;
+extern crate serial;
 #[macro_use]
 extern crate serde_derive;
 
