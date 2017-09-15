@@ -1,7 +1,10 @@
 //! A module for various setup functions
 
-use std::thread;
+use std;
 use std::path::Path;
+use std::fs::File;
+use std::io::Read;
+use std::thread;
 use serial;
 use serial::prelude::*;
 use serial::PortSettings;
@@ -12,7 +15,93 @@ use log4rs::config::{Appender, Root};
 use log4rs::append::console::ConsoleAppender;
 use log4rs::encode::pattern::PatternEncoder;
 use log4rs::append::file::FileAppender;
+use toml;
 use config::Config;
+
+/// The filename of the config
+const CONFIG_FILENAME: &'static str = "rover.toml";
+
+/// The directories to search for the config
+const CONFIG_DIRECTORIES: &[&'static str] = &[
+    "/etc/rover/",
+    "~/.config/rover/",
+    "~/.rover",
+    "" // Current working directory
+];
+
+/// Sets up config
+pub fn config() -> Config {
+    match find_and_parse_config(CONFIG_FILENAME, CONFIG_DIRECTORIES) {
+        Ok(config) => config,
+        Err(error) => {
+            eprintln!("Error parsing config: \"{:?}\"", error);
+            Config::default()
+        }
+    }
+}
+
+/// Searches for the config file in the specified directories, prioritising
+/// the directories nearer to the beginning
+fn find_and_parse_config(
+    name: &'static str,
+    directories: &[&'static str],
+) -> std::result::Result<Config, ConfigReadError> {
+
+    // Search every directory in the directories slice...
+    println!("Searching for configuration file named \"{}\"", name);
+    for directory in directories.iter() {
+
+        // Join the directory and the config file name
+        let path = Path::new(directory).join(name);
+        println!("Searching \"{}\"", directory);
+
+        if path.exists() {
+            println!("Found \"{}\" in \"{}\"", name, directory);
+
+            // Open the file, and attempt to read and deserialize it
+            match File::open(&path) {
+                Ok(mut file) => {
+
+                    // Attempt to read the file
+                    println!("Reading file...");
+                    let mut buf = Vec::new();
+
+                    if let Err(error) = file.read_to_end(&mut buf) {
+                        return Err(ConfigReadError::IoError(error));
+                    }
+
+                    // Attempt to deserialise the file
+                    println!("Deserializing...");
+                    return toml::from_slice(buf.as_slice()).map_err(ConfigReadError::TomlError);
+                }
+
+                // In the event of an error reading the file, skip it
+                Err(error) => {
+                    println!(
+                        "Error reading config file \"{}\": \"{}\"",
+                        path.to_string_lossy(),
+                        error
+                    );
+                    println!("Skipping...");
+                }
+            }
+        } else {
+            println!("\"{}\" not found in \"{}\"", name, directory);
+        }
+    }
+
+    println!("Config file not found!");
+    Err(ConfigReadError::NotFound)
+}
+
+/// In the event of an error in `find_and_parse`, this will be returned
+#[derive(Debug)]
+pub enum ConfigReadError {
+    TomlError(toml::de::Error),
+    IoError(std::io::Error),
+    NotFound,
+}
+
 
 // TODO test
 /// Sets up logging with log4rs
@@ -78,7 +167,7 @@ pub fn logging(config: &Config) {
     // Only add the file appender if it was set up correctly
     if let Ok(appender) = file_result {
         logger_config_builder =
-            logger_config_builder.appender(Appender::builder().build("stdout", Box::new(appender)));
+            logger_config_builder.appender(Appender::builder().build("file", Box::new(appender)));
         root = root.appender("file")
     } else {
         println!("File not available, writing to stdout only");

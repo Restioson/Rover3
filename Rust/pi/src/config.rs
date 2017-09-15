@@ -1,11 +1,6 @@
 //! Configuration structs and serialization
 
-use std;
 use std::time;
-use std::path::Path;
-use std::fs::File;
-use std::io::Read;
-use toml;
 use serial::*;
 
 /// A struct representing the configuration for the rover
@@ -68,71 +63,6 @@ pub struct SerialConfig {
     /// The serial timeout -- after an operation takes longer than the timeout
     /// value it will be terminated
     pub timeout: time::Duration,
-}
-
-impl Config {
-    /// Searches for the config file in the specified directories, prioritising
-    /// the directories nearer to the beginning
-    pub fn search_and_parse(
-        name: &'static str,
-        directories: &[&'static str],
-    ) -> std::result::Result<Config, ConfigReadError> {
-
-        // Search every directory in the directories slice...
-        println!("Searching for configuration file named \"{}\"", name);
-        for directory in directories.iter() {
-
-            // Join the directory and the config file name
-            let path = Path::new(directory).join(name);
-            println!("Searching \"{}\"", directory);
-
-            if path.exists() {
-                println!("Found \"{}\" in \"{}\"", name, directory);
-
-                // Open the file, and attempt to read and deserialize it
-                match File::open(&path) {
-                    Ok(mut file) => {
-
-                        // Attempt to read the file
-                        println!("Reading file...");
-                        let mut buf = Vec::new();
-
-                        if let Err(error) = file.read_to_end(&mut buf) {
-                            return Err(ConfigReadError::IoError(error));
-                        }
-
-                        // Attempt to deserialise the file
-                        println!("Deserializing...");
-                        return toml::from_slice(buf.as_slice()).map_err(ConfigReadError::TomlError);
-                    }
-
-                    // In the event of an error reading the file, skip it
-                    Err(error) => {
-                        println!(
-                            "Error reading config file \"{}\": \"{}\"",
-                            path.to_string_lossy(),
-                            error
-                        );
-                        println!("Skipping...");
-                    }
-                }
-            } else {
-                println!("\"{}\" not found in \"{}\"", name, directory);
-            }
-        }
-
-        println!("Config file not found!");
-        Err(ConfigReadError::NotFound)
-    }
-}
-
-/// In the event of an error reading the config file, this will be
-/// returned
-#[derive(Debug)]
-pub enum ConfigReadError {
-    TomlError(toml::de::Error),
-    IoError(std::io::Error),
-    NotFound,
 }
 
 impl Default for Config {
@@ -242,6 +172,7 @@ pub enum FlowControlDef {
 mod test {
 
     use super::*;
+    use toml;
 
     #[test]
     // Check that the correct names have been set, etc
