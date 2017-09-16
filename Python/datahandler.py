@@ -60,7 +60,7 @@ class SerialDataHandler():
         #Dictionary to store parsed data in
         data = {}
         
-        #Parse telemetry data
+        # Parse telemetry data
         data["latitude"] = message.pop(0)
         data["longitude"] = message.pop(0)
         data["altitude"] = message.pop(0)
@@ -69,7 +69,7 @@ class SerialDataHandler():
         data["speed"] = message.pop(0)
 
             
-        #Parse time data
+        # Parse time data
         data["year"] = message.pop(0)
         data["month"] = message.pop(0)
         data["day"] = message.pop(0)
@@ -77,7 +77,7 @@ class SerialDataHandler():
         data["minute"] = message.pop(0)
         data["second"] = message.pop(0)
         
-        #Parse environment data
+        # Parse environment data
         data["temperature"] = message.pop(0)
         data["humidity"] = message.pop(0)
         data["pitch"] = message.pop(0)

@@ -94,7 +94,7 @@ fn find_and_parse_config(
     Err(ConfigReadError::NotFound)
 }
 
-/// In the event of an error in `find_and_parse`, this will be returned
+/// In the event of an error in `find_and_parse_condig`, this will be returned
 #[derive(Debug)]
 pub enum ConfigReadError {
     TomlError(toml::de::Error),
@@ -117,7 +117,6 @@ pub enum ConfigReadError {
 /// Panics:
 ///     - if there is an error building the config (the config is invalid)
 ///     - if there is an error setting the logger (the logger is already set)
-///
 pub fn logging(config: &Config) {
 
     // Build the standard output appender
