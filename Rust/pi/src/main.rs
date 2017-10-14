@@ -39,7 +39,7 @@ use std::time::Duration;
 use std::thread;
 use std::io::{Read, BufRead, BufReader};
 use std::ascii::AsciiExt;
-use protocol::Message;
+use protocol::{Message, CommandHandler};
 
 fn main() {
 
@@ -148,7 +148,7 @@ fn main() {
 
         trace!("Parsing complete");
 
-        info!("Received message from Arduino"); // TODO to file
+        info!("Received message from Arduino");
 
         match message {
             Message::Data(data) => {
@@ -158,17 +158,15 @@ fn main() {
                         "Error serializing data to write to records: \"{:?}\"",
                         error
                     );
-                } else {
-                    if let Err(error) = data_records.flush() {
-                        error!("Error flushing csv data record writer: \"{:?}\"", error)
-                    };
+                } else if let Err(error) = data_records.flush() {
+                        error!("Error flushing csv data record writer: \"{:?}\"", error);
                 }
             }
             Message::Command(command) => {
-                info!("Command: {:?}", command)
-                // TODO execute
+                info!("Command: {:?}", command);
+                CommandHandler::handle(command);
             }
-        };
+        }
     }
 }
 
