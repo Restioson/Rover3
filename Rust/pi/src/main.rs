@@ -10,6 +10,7 @@
 //! ## Performance
 //!
 //! Python is simply not fast enough to be run with high performance on a processor
+//! while doing complex and expensive tasks such as image processing and recognition
 //! as limited as the Pi has -- performance is a priority, and this port should help
 //! achieve it
 //!
@@ -38,6 +39,7 @@ use std::time::Duration;
 use std::thread;
 use std::io::{Read, BufRead, BufReader};
 use std::ascii::AsciiExt;
+use protocol::Message;
 
 fn main() {
 
@@ -61,6 +63,11 @@ fn main() {
     }];
 
     info!("Serial port setup finished!");
+    info!("Setting up data recording...");
+
+    let mut data_records = setup::data_recording(&config.records);
+
+    info!("Data recording setup finished!");
     info!("All setup finished!");
 
     let mut port_reader = BufReader::new(&mut port);
@@ -119,13 +126,13 @@ fn main() {
         trace!("Read finished");
         debug!("Parsing...");
 
-        // TODO extract to handle function
-
         let data =
             handle_err![(std::str::from_utf8(packet.as_slice())) with err => {
                 error!("Error parsing packet as a utf-8 string: {:?}", err);
                 continue;
         }];
+
+        // TODO extract to handle function
 
         let message_option =
             handle_err![(parser.parse(data)) with err => {
@@ -142,8 +149,26 @@ fn main() {
         trace!("Parsing complete");
 
         info!("Received message from Arduino"); // TODO to file
-        info!("{:?}", message);
 
+        match message {
+            Message::Data(data) => {
+                info!("Data (see data records)");
+                if let Err(error) = data_records.serialize(data) {
+                    error!(
+                        "Error serializing data to write to records: \"{:?}\"",
+                        error
+                    );
+                } else {
+                    if let Err(error) = data_records.flush() {
+                        error!("Error flushing csv data record writer: \"{:?}\"", error)
+                    };
+                }
+            }
+            Message::Command(command) => {
+                info!("Command: {:?}", command)
+                // TODO execute
+            }
+        };
     }
 }
 

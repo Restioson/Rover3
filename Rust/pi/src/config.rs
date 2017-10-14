@@ -34,6 +34,9 @@ pub struct Config {
     /// The logging config
     pub logging: LoggingConfig,
 
+    /// The data recording config
+    pub records: DataRecordingConfig,
+
     /// The serial config
     pub serial: SerialConfig,
 }
@@ -58,6 +61,23 @@ pub struct LoggingConfig {
     pub level: LogLevel,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct DataRecordingConfig {
+    /// The directory to write data records to
+    pub directory: String,
+
+    /// If the first-choice for directory is not available, record to the second
+    pub fallback_directory: String,
+
+    /// The data recording filename -- the iso datetime will be added to the end
+    pub filename: String,
+
+    /// The output csv separator
+    pub separator: char,
+
+    /// The output csv terminator
+    pub terminator: char,
+}
 /// Configuration for the serial port
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct SerialConfig {
@@ -103,6 +123,14 @@ impl Default for Config {
                 pattern: "{d} {h({l})} - {m}{n}".to_string(),
                 filename: "rover".to_string(),
                 level: LogLevel::Debug,
+            },
+
+            records: DataRecordingConfig {
+                directory: "/mnt/missiondata/data/".to_string(),
+                fallback_directory: "data/".to_string(),
+                filename: "data".to_string(),
+                separator: ';',
+                terminator: '\n',
             },
 
             serial: SerialConfig {
@@ -252,6 +280,13 @@ mod test {
             filename = "rover"
             level = "debug"
 
+            [records]
+            directory = "/mnt/missiondata/data/"
+            fallback_directory = "data/"
+            filename = "data"
+            separator = ';'
+            terminator = "\n"
+
             [serial]
             port = "/dev/ttyAMA0"
             char_size = "8"
@@ -269,13 +304,21 @@ mod test {
             nanos = 0
         "#;
 
-        let config_struct = Config {
+        let config_struct =  Config {
             logging: LoggingConfig {
                 directory: "/mnt/missiondata/log/".to_string(),
                 fallback_directory: "log/".to_string(),
                 pattern: "{d} {h({l})} - {m}{n}".to_string(),
                 filename: "rover".to_string(),
                 level: LogLevel::Debug,
+            },
+
+            records: DataRecordingConfig {
+                directory: "/mnt/missiondata/data/".to_string(),
+                fallback_directory: "data/".to_string(),
+                filename: "data".to_string(),
+                separator: ';',
+                terminator: '\n',
             },
 
             serial: SerialConfig {

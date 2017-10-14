@@ -14,8 +14,9 @@ pub enum Message {
 
 /// A struct representing data received from serial
 // Data are my favourite star trek character
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Data {
+    // Telemetry data
     latitude: f64,
     longitude: f64,
     altitude: f64,
@@ -23,6 +24,7 @@ pub struct Data {
     heading: f32,
     speed: f32,
 
+    // Time data
     year: u16,
     month: u8,
     day: u8,
@@ -30,8 +32,11 @@ pub struct Data {
     minute: u8,
     second: u8,
 
+    // Environment data
     temperature: f32,
     humidity: f32,
+
+    // 'Physical state' data
     pitch: f32,
     roll: f32,
 
@@ -130,7 +135,7 @@ mod test {
 
         // Real world example
         // Latitude/longitude/altitude censored
-        let raw = "DATA -100.00 100.00 100.00 77.39 195.9 1.111".to_owned() +
+        let raw = "DATA -100.00 100.00 100.00 77.39 195.9 1.111 ".to_owned() +
             "2017 9 29 13 14 48 0 0 2.1 -1.3 82 67.3\n";
 
         let expected_data = Data {
@@ -154,7 +159,7 @@ mod test {
             object_distance_back: 67.3,
         };
 
-        let data = parser.parse(raw).unwrap().unwrap();
+        let data = parser.parse(&raw).unwrap().unwrap();
 
         assert_eq!(data, Message::Data(expected_data));
     }

@@ -1,10 +1,10 @@
 //! A module for various setup functions
 
-use std;
+use std::{self, str, thread};
+use std::convert::From;
 use std::path::Path;
 use std::fs::File;
-use std::io::Read;
-use std::thread;
+use std::io::{Read, Write, Error};
 use serial;
 use serial::prelude::*;
 use serial::PortSettings;
@@ -17,10 +17,8 @@ use log4rs::append::console::ConsoleAppender;
 use log4rs::encode::pattern::PatternEncoder;
 use log4rs::append::file::FileAppender;
 use toml;
-use config;
-use config::Config;
-use config::LoggingConfig;
-use config::SerialConfig;
+use csv;
+use config::{self, Config, LoggingConfig, SerialConfig, DataRecordingConfig};
 
 /// The filename of the config
 const CONFIG_FILENAME: &'static str = "rover.toml";
@@ -32,6 +30,28 @@ const CONFIG_DIRECTORIES: &[&'static str] = &[
     "~/.rover",
     "" // Current working directory
 ];
+
+/// A fallback writer to write data records to. Just logs to logfile
+struct FallbackDataRecordingWriter;
+
+impl Write for FallbackDataRecordingWriter {
+    fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
+
+        let utf = if let Ok(string) = str::from_utf8(buf) {
+            string
+        } else {
+            return Err(Error::from(std::io::ErrorKind::InvalidData));
+        };
+
+        info!("DATA - {}", utf);
+
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> Result<(), Error> {
+        Ok(())
+    }
+}
 
 /// Sets up config
 pub fn config() -> Config {
@@ -111,13 +131,11 @@ fn find_and_parse_config(
 #[derive(Debug)]
 pub enum ConfigReadError {
     TomlError(toml::de::Error),
-    IoError(std::io::Error),
+    IoError(Error),
     ValidationError(config::ValidationError),
     NotFound,
 }
 
-
-// TODO test
 /// Sets up logging with log4rs
 ///
 /// Programatically creates a logging config and sets values according to config.
@@ -141,23 +159,23 @@ pub fn logging(config: &LoggingConfig) {
     // If the first choice for the log file is not available, use the fallback
     let first_choice = Path::new(&config.directory);
 
-    let path = if first_choice.exists() {
-        first_choice.join(&config.filename)
+    let path_raw = if first_choice.exists() {
+        Path::new(&config.directory).join(&config.filename)
     } else {
-        println!("Using fallback directory");
+        println!("Using fallback directory [logging]");
         Path::new(&config.fallback_directory).join(&config.filename)
     };
+
+    let path = format!(
+        "{}{}.log",
+        path_raw.to_string_lossy(),
+        Local::now().to_string().replace(":", "-")
+    );
 
     // Build the file appender
     let file_result = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new(config.pattern.as_str())))
-        .build(
-            format!(
-                "{}{}.log",
-                path.to_string_lossy(),
-                Local::now().to_string().replace(":", "-")
-            ).as_str(),
-        );
+        .build(path.as_str());
 
     // The main config builder
     let mut logger_config_builder = log4rs::config::Config::builder().appender(
@@ -237,6 +255,44 @@ pub fn serial_port(config: &SerialConfig) -> Result<Box<SerialPort>, serial::Err
 
     Ok(port)
 
+}
+
+/// Sets up data recording
+pub fn data_recording(config: &DataRecordingConfig) -> csv::Writer<Box<Write>> {
+
+    // If the first choice for the data record file is not available, use the fallback
+    let first_choice = Path::new(&config.directory);
+
+    let path_raw = if first_choice.exists() {
+        first_choice.join(&config.filename)
+    } else {
+        warn!("Using fallback directory [data recording]");
+        Path::new(&config.fallback_directory).join(&config.filename)
+    };
+
+    let path = format!(
+        "{}{}.csv",
+        path_raw.to_string_lossy(),
+        Local::now().to_string().replace(":", "-")
+    );
+
+    let writer: Box<Write> = match File::create(path.as_str()) {
+        Ok(file) => Box::new(file),
+        Err(error) => {
+            error!(
+                "Error setting up data logging: \"{:?}\". Writing to logger",
+                error
+            );
+
+            println!("beep");
+            Box::new(FallbackDataRecordingWriter)
+        }
+    };
+
+    csv::WriterBuilder::new()
+        .delimiter(config.separator as u8)
+        .terminator(csv::Terminator::Any(config.terminator as u8))
+        .from_writer(writer)
 }
 
 #[cfg(test)]
