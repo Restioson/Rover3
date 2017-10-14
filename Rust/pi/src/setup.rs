@@ -9,14 +9,18 @@ use serial;
 use serial::prelude::*;
 use serial::PortSettings;
 use chrono::Local;
-use log;
+use log::LogLevel;
+use log::LogLevelFilter;
 use log4rs;
 use log4rs::config::{Appender, Root};
 use log4rs::append::console::ConsoleAppender;
 use log4rs::encode::pattern::PatternEncoder;
 use log4rs::append::file::FileAppender;
 use toml;
+use config;
 use config::Config;
+use config::LoggingConfig;
+use config::SerialConfig;
 
 /// The filename of the config
 const CONFIG_FILENAME: &'static str = "rover.toml";
@@ -35,6 +39,7 @@ pub fn config() -> Config {
         Ok(config) => config,
         Err(error) => {
             eprintln!("Error parsing config: \"{:?}\"", error);
+            eprintln!("Using default config");
             Config::default()
         }
     }
@@ -43,8 +48,8 @@ pub fn config() -> Config {
 /// Searches for the config file in the specified directories, prioritising
 /// the directories nearer to the beginning
 fn find_and_parse_config(
-    name: &'static str,
-    directories: &[&'static str],
+    name: &str,
+    directories: &[&str],
 ) -> std::result::Result<Config, ConfigReadError> {
 
     // Search every directory in the directories slice...
@@ -72,7 +77,15 @@ fn find_and_parse_config(
 
                     // Attempt to deserialise the file
                     println!("Deserializing...");
-                    return toml::from_slice(buf.as_slice()).map_err(ConfigReadError::TomlError);
+
+                    let conf = toml::from_slice(buf.as_slice()).map_err(
+                        ConfigReadError::TomlError,
+                    )?;
+                    config::Config::validate(&conf).map_err(
+                        ConfigReadError::ValidationError,
+                    )?;
+
+                    return Ok(conf);
                 }
 
                 // In the event of an error reading the file, skip it
@@ -94,11 +107,12 @@ fn find_and_parse_config(
     Err(ConfigReadError::NotFound)
 }
 
-/// In the event of an error in `find_and_parse_condig`, this will be returned
+/// In the event of an error in `find_and_parse_config`, this will be returned
 #[derive(Debug)]
 pub enum ConfigReadError {
     TomlError(toml::de::Error),
     IoError(std::io::Error),
+    ValidationError(config::ValidationError),
     NotFound,
 }
 
@@ -117,30 +131,26 @@ pub enum ConfigReadError {
 /// Panics:
 ///     - if there is an error building the config (the config is invalid)
 ///     - if there is an error setting the logger (the logger is already set)
-pub fn logging(config: &Config) {
+pub fn logging(config: &LoggingConfig) {
 
     // Build the standard output appender
     let stdout = ConsoleAppender::builder()
-        .encoder(Box::new(
-            PatternEncoder::new(config.logging.pattern.as_str()),
-        ))
+        .encoder(Box::new(PatternEncoder::new(config.pattern.as_str())))
         .build();
 
     // If the first choice for the log file is not available, use the fallback
-    let first_choice = Path::new(&config.logging.directory);
+    let first_choice = Path::new(&config.directory);
 
     let path = if first_choice.exists() {
-        first_choice.join(&config.logging.filename)
+        first_choice.join(&config.filename)
     } else {
         println!("Using fallback directory");
-        Path::new(&config.logging.fallback_directory).join(&config.logging.filename)
+        Path::new(&config.fallback_directory).join(&config.filename)
     };
 
     // Build the file appender
     let file_result = FileAppender::builder()
-        .encoder(Box::new(
-            PatternEncoder::new(config.logging.pattern.as_str()),
-        ))
+        .encoder(Box::new(PatternEncoder::new(config.pattern.as_str())))
         .build(
             format!(
                 "{}{}.log",
@@ -172,12 +182,20 @@ pub fn logging(config: &Config) {
         println!("File not available, writing to stdout only");
     }
 
+    // Map log level to LogLevelFilter
+
+    let level = match config.level {
+        LogLevel::Error => LogLevelFilter::Error,
+        LogLevel::Warn => LogLevelFilter::Warn,
+        LogLevel::Info => LogLevelFilter::Info,
+        LogLevel::Debug => LogLevelFilter::Debug,
+        LogLevel::Trace => LogLevelFilter::Trace,
+    };
+
     // Finish building the logger config
-    let logger_config = logger_config_builder
-        .build(root.build(log::LogLevelFilter::Debug))
-        .expect(
-            "Error building config -- this is a bug! Is the config invalid?",
-        );
+    let logger_config = logger_config_builder.build(root.build(level)).expect(
+        "Error building config -- this is a bug! Is the config invalid?",
+    );
 
     // Initialise logging
     log4rs::init_config(logger_config).expect(
@@ -189,32 +207,32 @@ pub fn logging(config: &Config) {
 ///
 /// Retries until the port is available. If configuring fails, then it will
 /// return an error result
-pub fn serial_port(config: &Config) -> Result<Box<SerialPort>, serial::Error> {
+pub fn serial_port(config: &SerialConfig) -> Result<Box<SerialPort>, serial::Error> {
 
     // Retry until serial port available
     let mut port: Box<SerialPort> = loop {
-        match serial::open(&config.serial.port) {
+        match serial::open(&config.port) {
             Ok(port) => break Box::new(port),
             Err(error) => {
                 warn!(
                     "Couldn't acquire serial port: \"{}\" -- Trying again in 5 seconds",
                     error
                 );
-                thread::sleep(config.serial.retry_delay);
+                thread::sleep(config.retry_delay);
             }
         }
     };
 
     // Configure port
 
-    port.set_timeout(config.serial.timeout)?;
+    port.set_timeout(config.timeout)?;
 
     port.configure(&PortSettings {
-        baud_rate: config.serial.baud,
-        char_size: config.serial.char_size,
-        parity: config.serial.parity,
-        stop_bits: config.serial.stop_bits,
-        flow_control: config.serial.flow_control,
+        baud_rate: config.baud,
+        char_size: config.char_size,
+        parity: config.parity,
+        stop_bits: config.stop_bits,
+        flow_control: config.flow_control,
     })?;
 
     Ok(port)
@@ -231,7 +249,7 @@ mod test {
     #[cfg(target_os = "windows")]
     const PORT: &'static str = "CNCA0"; // For mocking, one option is com0com
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(unix)]
     const PORT: &'static str = "/dev/ptyS10"; // For mocking, one option is socat
 
     // Check that serial_port actually uses the config it is passed
@@ -249,7 +267,7 @@ mod test {
             Err(error) => panic!(format!("Sanity check failed: \"{}\"", error)),
         }
 
-        let mut port = serial_port(&config).unwrap();
+        let mut port = serial_port(&config.serial).unwrap();
 
         // Assertion will fail if device not in use
         // Device being in use shows us that the method has opened the right device

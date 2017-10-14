@@ -1,10 +1,35 @@
 //! Configuration structs and serialization
 
+use std;
 use std::time;
+use log::LogLevel;
 use serial::*;
 
+pub const SERIAL_DATA_LABELS: &[&'static str] = &[
+    "latitude",
+    "longitude",
+    "altitude",
+    "course",
+    "heading",
+    "speed",
+    "year",
+    "month",
+    "day",
+    "hour",
+    "minute",
+    "second",
+    "temperature",
+    "humidity",
+    "pitch",
+    "roll",
+    "object_distance_front",
+    "object_distance_back",
+];
+pub const SERIAL_SEPARATOR: char = ' ';
+pub const SERIAL_TERMINATOR: char = '\n';
+
 /// A struct representing the configuration for the rover
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Config {
     /// The logging config
     pub logging: LoggingConfig,
@@ -14,7 +39,7 @@ pub struct Config {
 }
 
 /// A struct representing the logging configuration for the Rover
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct LoggingConfig {
     /// The directory to write log files to
     pub directory: String,
@@ -27,10 +52,14 @@ pub struct LoggingConfig {
 
     /// The filename for the log -- the iso datetime will be added to the end
     pub filename: String,
+
+    /// The log level
+    #[serde(with = "LogLevelDef")]
+    pub level: LogLevel,
 }
 
 /// Configuration for the serial port
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct SerialConfig {
     /// The serial port path/name. Can be a path, such as `/dev/tty...` or a name,
     /// such as `COM...`
@@ -73,11 +102,12 @@ impl Default for Config {
                 fallback_directory: "log/".to_string(),
                 pattern: "{d} {h({l})} - {m}{n}".to_string(),
                 filename: "rover".to_string(),
+                level: LogLevel::Debug,
             },
 
             serial: SerialConfig {
                 port: "/dev/ttyAMA0".to_string(),
-                baud: Baud9600,
+                baud: Baud57600,
                 char_size: Bits8,
                 parity: ParityNone,
                 stop_bits: Stop1,
@@ -88,6 +118,26 @@ impl Default for Config {
         }
     }
 }
+
+impl Config {
+    /// Validates a config
+    pub fn validate(config: &Config) -> std::result::Result<(), ValidationError> {
+
+        // Check that the logging directory is not the same as the fallback
+        if config.logging.directory == config.logging.fallback_directory {
+            return Err(ValidationError::LoggingDirectoryIsFallback);
+        }
+
+        Ok(())
+    }
+}
+
+/// Returned from `validate` if the config is invalid
+#[derive(Debug)]
+pub enum ValidationError {
+    LoggingDirectoryIsFallback,
+}
+
 
 // Remote serialization defs
 
@@ -168,6 +218,22 @@ pub enum FlowControlDef {
     FlowHardware,
 }
 
+#[allow(dead_code)]
+#[derive(Serialize, Deserialize)]
+#[serde(remote = "LogLevel")]
+pub enum LogLevelDef {
+    #[serde(rename = "error")]
+    Error = 1,
+    #[serde(rename = "warn")]
+    Warn,
+    #[serde(rename = "info")]
+    Info,
+    #[serde(rename = "debug")]
+    Debug,
+    #[serde(rename = "trace")]
+    Trace,
+}
+
 #[cfg(test)]
 mod test {
 
@@ -184,6 +250,7 @@ mod test {
             fallback_directory = "log/"
             pattern = "{d} {h({l})} - {m}{n}"
             filename = "rover"
+            level = "debug"
 
             [serial]
             port = "/dev/ttyAMA0"
@@ -191,7 +258,7 @@ mod test {
             parity = "none"
             stop_bits = "1"
             flow_control = "none"
-            baud = "9600"
+            baud = "57600"
 
             [serial.retry_delay]
             secs = 5
@@ -208,11 +275,12 @@ mod test {
                 fallback_directory: "log/".to_string(),
                 pattern: "{d} {h({l})} - {m}{n}".to_string(),
                 filename: "rover".to_string(),
+                level: LogLevel::Debug,
             },
 
             serial: SerialConfig {
                 port: "/dev/ttyAMA0".to_string(),
-                baud: Baud9600,
+                baud: Baud57600,
                 char_size: Bits8,
                 parity: ParityNone,
                 stop_bits: Stop1,
@@ -226,5 +294,23 @@ mod test {
             toml::from_str::<Config>(config_toml).unwrap(),
             config_struct
         );
+    }
+
+
+    #[test]
+    fn serial_terminator_is_not_separator() {
+        assert_ne!(SERIAL_SEPARATOR, SERIAL_TERMINATOR);
+    }
+
+    #[test]
+    fn serial_data_labels_have_no_duplicates() {
+        let mut deduped = SERIAL_DATA_LABELS.to_vec();
+        deduped.sort();
+        deduped.dedup();
+
+        let mut sorted = SERIAL_DATA_LABELS.to_vec();
+        sorted.sort();
+
+        assert_eq!(sorted, deduped);
     }
 }

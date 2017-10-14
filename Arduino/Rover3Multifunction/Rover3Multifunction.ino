@@ -32,7 +32,7 @@ boolean debug = false;
 int melody[] = {
   NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4 };
 
-// note durations: 4 = quarter note, 8 = eighth note, etc.:
+// note durations: 4 = crochet, 8 = quaver, etc.:
 int noteDurations[] = {
   4, 8, 8, 4, 4, 4, 4, 4 };
 
@@ -146,7 +146,7 @@ void setup () {
   xbee.setSerial(Serial2);
   
   // Tell XBee to start Serial
-  xbee.begin(9600);
+  Serial2.begin(9600);
 
   // Motors
   
@@ -810,15 +810,19 @@ void writeStatus() {
       + String(hour) + " "
       + String(minutes) + " "
       + String(second) + " "
-      + "unknown "  // temperature
-      + "unknown "  // humidity
+      + "0 "  // temperature
+      + "0 "  // humidity
       + String(compass_pitch, 1) + " "
       + String(compass_roll, 1) + " "
-      + String(fwd_range_cm, 1) + " "
-      + String(rear_range_cm, 1) + " ";
+      + String(fwd_range_cm) + " " // TODO:#1 this doesn't send anything
+      + String(rear_range_cm, 1);
   
      // USB debugging
      Serial.println(logMessage);
+
+     // TODO:#2 remove when #1 has been fixed
+     Serial.print("Fwd range: ");
+     Serial.println(String(fwd_range_cm));
      
      // RPi
      Serial1.println(logMessage);
