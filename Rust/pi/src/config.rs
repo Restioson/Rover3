@@ -304,7 +304,7 @@ mod test {
             nanos = 0
         "#;
 
-        let config_struct =  Config {
+        let config_struct = Config {
             logging: LoggingConfig {
                 directory: "/mnt/missiondata/log/".to_string(),
                 fallback_directory: "log/".to_string(),

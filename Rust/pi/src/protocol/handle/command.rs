@@ -5,11 +5,10 @@ use protocol::Command;
 pub struct CommandHandler;
 
 impl CommandHandler {
-
     /// Handle a command
     pub fn handle(command: Command) {
         match command {
-            Command::Shutdown => CommandHandler::shutdown()
+            Command::Shutdown => CommandHandler::shutdown(),
         }
     }
 
@@ -17,8 +16,8 @@ impl CommandHandler {
     fn shutdown() {
         info!("Received shutdown command. Shutting down...");
 
-        process::Command::new("sh")
-            .arg("-c")
-            .args(&["sudo", "halt"]);
+        process::Command::new("sh").arg("-c").args(
+            &["sudo", "halt"],
+        );
     }
 }

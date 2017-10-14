@@ -7,24 +7,24 @@ use csv;
 use config;
 use protocol::{Data, Message, Command};
 
-/// Enum representing errors returned from `parse` from `SerialParser`
+/// Enum representing errors returned from `parse` from `Parser`
 #[derive(Debug)]
-pub enum ParseError<'a> {
+pub enum ParseError {
     CsvError(csv::Error),
     PacketTooShort,
     NoTag,
-    InvalidTag(&'a str),
-    InvalidCommand(&'a str),
+    InvalidTag(String),
+    InvalidCommand(String),
 }
 
 /// Parser for serial protocol packets
 ///
 /// It must be fed with the `feed` method with data from serial
-pub struct SerialParser {
+pub struct Parser {
     data_records: csv::DeserializeRecordsIntoIter<Cursor<Vec<u8>>, Data>,
 }
 
-impl SerialParser {
+impl Parser {
     pub fn new() -> Self {
         let mut reader = csv::ReaderBuilder::new()
             .delimiter(config::SERIAL_SEPARATOR as u8)
@@ -40,10 +40,10 @@ impl SerialParser {
 
         write_csv(&mut reader, headers.as_bytes());
 
-        SerialParser { data_records: reader.into_deserialize() }
+        Parser { data_records: reader.into_deserialize() }
     }
 
-    pub fn parse<'a>(&mut self, packet: &'a str) -> Result<Option<Message>, ParseError<'a>> {
+    pub fn parse<'a>(&mut self, packet: &'a str) -> Result<Option<Message>, ParseError> {
 
         let tag = match packet.split(config::SERIAL_SEPARATOR).next() {
             Some(tag) => tag,
@@ -70,10 +70,10 @@ impl SerialParser {
             "CMD" => {
                 match data {
                     "SHUTDOWN" => Ok(Some(Message::Command(Command::Shutdown))),
-                    _ => Err(ParseError::InvalidCommand(data)), // Unknown command
+                    _ => Err(ParseError::InvalidCommand(data.to_string())), // Unknown command
                 }
             }
-            _ => Err(ParseError::InvalidTag(tag)), // Unknown tag
+            _ => Err(ParseError::InvalidTag(tag.to_string())), // Unknown tag
         }
     }
 }
@@ -85,7 +85,7 @@ mod test {
 
     #[test]
     fn parse_parses_correctly() {
-        let mut parser = SerialParser::new();
+        let mut parser = Parser::new();
 
         // Real world example
         // Latitude/longitude/altitude censored

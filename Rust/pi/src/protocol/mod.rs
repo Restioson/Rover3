@@ -1,7 +1,11 @@
+//! A module grouping things to handle the serial data protocol
+
 pub mod parse;
 pub mod handle;
+pub mod read;
 pub use self::parse::*;
 pub use self::handle::*;
+pub use self::read::*;
 
 /// A struct representing data received from serial
 // Data are my favourite star trek character

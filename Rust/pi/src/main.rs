@@ -39,7 +39,6 @@ use std::time::Duration;
 use std::thread;
 use std::io::{Read, BufRead, BufReader};
 use std::ascii::AsciiExt;
-use protocol::{Message, CommandHandler};
 
 fn main() {
 
@@ -65,15 +64,11 @@ fn main() {
     info!("Serial port setup finished!");
     info!("Setting up data recording...");
 
-    let mut data_records = setup::data_recording(&config.records);
-
     info!("Data recording setup finished!");
     info!("All setup finished!");
 
-    let mut port_reader = BufReader::new(&mut port);
-
-    let mut parser = protocol::SerialParser::new();
-    let mut packet = Vec::new();
+    let mut reader = protocol::Reader::new(BufReader::new(&mut port));
+    let mut handler = protocol::SerialHandler::new(&config.records);
 
     // Check that data is well formed
     // This lets us check that the baudrate is set correctly
@@ -81,7 +76,7 @@ fn main() {
     let mut buf: [u8; 100] = [0; 100];
 
     loop {
-        if let Err(error) = port_reader.read_exact(&mut buf) {
+        if let Err(error) = reader.get_mut().read_exact(&mut buf) {
             error!("Error reading from port for analysis: {:?}", error);
             debug!("Retrying...");
         } else {
@@ -103,7 +98,11 @@ fn main() {
     loop {
         let throw_away = &mut Vec::new();
 
-        if let Err(error) = port_reader.read_until(config::SERIAL_TERMINATOR as u8, throw_away) {
+        if let Err(error) = reader.get_mut().read_until(
+            config::SERIAL_TERMINATOR as u8,
+            throw_away,
+        )
+        {
             error!("Error reading from port to clear state: {:?}", error);
             debug!("Retrying...");
         } else {
@@ -113,60 +112,18 @@ fn main() {
     }
 
     loop {
-        debug!("Reading...");
 
-        // Clear packet of previous data
-        packet.clear();
-
-        if let Err(error) = port_reader.read_until(config::SERIAL_TERMINATOR as u8, &mut packet) {
-            error!("Error reading from serial port: {}", error);
-            continue;
-        }
-
-        trace!("Read finished");
-        debug!("Parsing...");
-
-        let data =
-            handle_err![(std::str::from_utf8(packet.as_slice())) with err => {
-                error!("Error parsing packet as a utf-8 string: {:?}", err);
+        let message = match reader.read() {
+            Ok(message) => message,
+            Err(err) => {
+                error!("Error reading and parsing serial: {:?}", err);
                 continue;
-        }];
-
-        // TODO extract to handle function
-
-        let message_option =
-            handle_err![(parser.parse(data)) with err => {
-                error!("Error parsing serial packet: {:?}", err);
-                continue;
-        }];
-
-        let message =
-            handle_option![message_option => {
-                error!("Reached EOF -- not enough data? Was the data malformed?");
-                continue;
-        }];
-
-        trace!("Parsing complete");
+            }
+        };
 
         info!("Received message from Arduino");
 
-        match message {
-            Message::Data(data) => {
-                info!("Data (see data records)");
-                if let Err(error) = data_records.serialize(data) {
-                    error!(
-                        "Error serializing data to write to records: \"{:?}\"",
-                        error
-                    );
-                } else if let Err(error) = data_records.flush() {
-                        error!("Error flushing csv data record writer: \"{:?}\"", error);
-                }
-            }
-            Message::Command(command) => {
-                info!("Command: {:?}", command);
-                CommandHandler::handle(command);
-            }
-        }
+        handler.handle(message);
     }
 }
 
