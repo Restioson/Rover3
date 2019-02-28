@@ -1,16 +1,11 @@
 #include <Arduino.h>
+#include "motor.h"
 
 #define BRAKEVCC             0
 #define CW                   1
 #define CCW                  2
 #define BRAKEGND             3
 #define CS_THRESHOLD         100
-
-enum direction {
-  forward,
-  backward,
-  stationary,
-};
 
 /*  VNH2SP30 pin definitions
  xxx[0] controls '1' outputs
@@ -21,9 +16,9 @@ int pwmpin[2] = {5, 6};  // PWM input
 int cspin[2] = {2, 3};   // CS: Current sense ANALOG input
 int enpin[2] = {0, 1};   // EN: Status of switches output (Analog pin)
 
-// Motion
-direction movement_direction = stationary;
-unsigned int movement_speed = 0;
+bool range_override = false;
+Direction direction = STATIONARY;
+unsigned int speed = 0;
 
 void setupMotors() {
   // Initialize digital pins as outputs
@@ -89,8 +84,8 @@ void stopMotors() {
   motorOff(0);
   motorOff(1);
 
-  movement_direction = stationary;
-  movement_speed = 0;
+  direction = STATIONARY;
+  speed = 0;
 }
 
 void testMotors() {
@@ -121,8 +116,8 @@ void testMotors() {
 void goForward(int power) {
   stopMotors();
 
-  movement_speed = power;
-  movement_direction = forward;
+  speed = power;
+  direction = FORWARDS;
 
   Serial.print("Forward ");
   Serial.print(power);
@@ -142,8 +137,8 @@ void goBack(int power) {
   motorGo(0, CCW, power);
   motorGo(1, CCW, power * 0.87);
 
-  movement_speed = power;
-  movement_direction = forward;
+  speed = power;
+  direction = BACKWARDS;
 }
 
 void turnLeft(int power){
@@ -157,7 +152,7 @@ void turnLeft(int power){
   motorGo(1, CW, power);
 
   // speed? does it matter? // TODO
-  movement_direction = forward;
+  direction = FORWARDS;
 }
 
 void turnRight(int power) {
@@ -171,7 +166,7 @@ void turnRight(int power) {
   motorGo(1, CW, power/3);
 
   // speed?
-  movement_direction = forward;
+  direction = FORWARDS;
 }
 
 void pivotLeft(int power) {

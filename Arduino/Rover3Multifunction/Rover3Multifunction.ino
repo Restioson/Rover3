@@ -1,8 +1,10 @@
 #include "motor.h"
 #include "remote.h"
 #include "rangefinding.h"
+#include "compass.h"
+#include "command.h"
 
-#define LOGGING_BAUD         115200
+#define LOGGING_BAUD 115200
 
 void setup() {
   // Serial - USB serial console (debugging)
@@ -11,6 +13,7 @@ void setup() {
 
   setupRemote();
   setupRangefinding();
+  setupCompass();
   setupMotors();
 
   Serial.println("Rover Multifunction Start!");
@@ -19,13 +22,23 @@ void setup() {
 void loop() {
   char command = readCommand();
 
+  long forward_distance = forward_rangefind();
+  long backwards_distance = backwards_rangefind();
+
   if (command != '\0') {
     Serial.print("Command: \"");
     Serial.print(command);
     Serial.println("\"");
+
+    executeCommand(command, forward_distance, backwards_distance);
   }
 
-  int forward_distance = forward_rangefind();
-  // Serial.print("Forward distance: ");
-  // Serial.println(forward_distance);
+  CompassData compass = readCompass();
+  // TODO
+  Serial.print("Head: ");
+  Serial.print(compass.heading);
+  Serial.print(" Pitch: ");
+  Serial.print(compass.pitch);
+  Serial.print(" Roll: ");
+  Serial.println(compass.roll);
 }
