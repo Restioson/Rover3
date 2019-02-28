@@ -1,3 +1,5 @@
+#include <SPI.h>
+#include <RH_RF95.h>
 
 //Analog read pins
 const int xPin = 0;
@@ -8,32 +10,13 @@ int x;
 int y;
 int z;
 
-// XBEE
-#include <XBee.h>
-
-// The address of the Rover XBee
-#define ROVER_XBEE_ADDR 0x6524
-// #define ROVER_XBEE_ADDR 0xffff
-
-// Create an array for holding the data you want to send.
-uint8_t payload[] = { ' ' };
-
-// 16-bit addressing: Enter address of remote XBee, typically the coordinator
-Tx16Request tx = Tx16Request(ROVER_XBEE_ADDR, payload, sizeof(payload));
-TxStatusResponse txStatus = TxStatusResponse();
-
-// create reusable response objects for responses we expect to handle 
-
-// XBeeResponse response = XBeeResponse();
-Rx16Response rx16 = Rx16Response();
-Rx64Response rx64 = Rx64Response();
-
 uint8_t option = 0;
 uint8_t data = 0;
 
 unsigned long last_sent = millis();
 
-XBee xbee = XBee();
+// Singleton instance of the radio driver
+RH_RF95 rf95(53);
 
 enum Direction { FORWARD, BACK, LEFT, RIGHT, STOP };
 
@@ -54,6 +37,17 @@ const byte PIN_BUTTON_LEFT = 6;
 // ********** SETUP ***********
 
 void setup () {
+
+  // Serial  
+  Serial.begin(115200);
+  while (!Serial) ;
+  if (!rf95.init()) {
+    Serial.println("LoRa init failed"); 
+  } else {
+    Serial.println("LoRa successfully initialised");
+  }
+    
+  Serial.println("Rover Remote Control Start!");
 
   // Switch pins
   // Specify each pin connected to a pushbutton as an input.
@@ -79,23 +73,9 @@ void setup () {
 
   pinMode(PIN_BUTTON_SELECT, INPUT);
   digitalWrite(PIN_BUTTON_SELECT, HIGH);
-
-  // Serial  
-  Serial.begin(115200);
-
-  // Create an XBee object at the top of your sketch    
-  xbee.setSerial(Serial3);
-  
-  // Tell XBee to start Serial
-  xbee.begin(9600);
-
-  xbeeCheck();
   
   // Wait 3 seconds
   delay(3000);
-
-    
-  Serial.println("Rover Remote Control Start!");
 }
 
 // ********** MAIN ***********
@@ -277,45 +257,10 @@ void loop ()
 
 void sendCommand(char cmd)
 {
-  
-  payload[0] = cmd;
-  
-  // 16-bit addressing: Enter address of remote XBee, typically the coordinator
-  Tx16Request tx = Tx16Request(ROVER_XBEE_ADDR, payload, sizeof(payload));
-
-  xbee.send(tx);
-  
-      // after sending a tx request, we expect a status response
-      // wait up to 5 seconds for the status response
-      if (xbee.readPacket(5000)) {
-        // got a response!
-  
-        // should be a znet tx status            	
-    	if (xbee.getResponse().getApiId() == TX_STATUS_RESPONSE) {
-    	   xbee.getResponse().getZBTxStatusResponse(txStatus);
-    		
-    	   // get the delivery status, the fifth byte
-           if (txStatus.getStatus() == SUCCESS) {
-            	// success.  time to celebrate
-           } else {
-            	// the remote XBee did not receive our packet. is it powered on?
-               Serial.println("Did not receive packet");
-           }
-        }      
-      } else if (xbee.getResponse().isError()) {
-        Serial.print("Error reading packet.  Error code: ");  
-        Serial.println(xbee.getResponse().getErrorCode());
-        // or flash error led
-      } else {
-        // local XBee did not provide a timely TX Status   Radio is not configured properly or connected
-        Serial.println("Unknown XBEE Error");
-      }
-
-  
-}
-
-void xbeeCheck()
-{
-  
-  
+  uint8_t buf[] = {(uint8_t) cmd};
+  rf95.send(buf, sizeof(data));
+  rf95.waitPacketSent();
+  Serial.print(rf95.txGood(), DEC);
+  Serial.print(" good");
+  Serial.println();
 }
