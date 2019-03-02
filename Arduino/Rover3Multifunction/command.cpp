@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "motor.h"
+#include "sound.h"
 
 // Write a command (to RPi)
 void writeCommand(String cmd) {
@@ -76,7 +77,7 @@ void executeCommand(char command, long fwd_range_cm, long rear_range_cm) {
             break;
 
     case '/' :
-            //tone(SPEAKER_PIN, NOTE_G4, 250); // TODO
+            note(NOTE_G4, 250);
             writeCommand("SHUTDOWN");
             break;
   }

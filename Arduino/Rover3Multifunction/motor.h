@@ -7,6 +7,8 @@ enum Direction {
 #define DISTANCE_STOP           50
 #define DISTANCE_SLOWDOWN       150
 #define DISTANCE_REAR_SLOWDOWN  75
+#define SPEED_SLOW              60
+#define SPEED_FORWARD           255
 
 extern bool range_override;
 extern unsigned int speed;
@@ -24,3 +26,5 @@ void turnLeft(int power);
 void turnRight(int power);
 void pivotLeft(int power);
 void pivotRight(int power);
+
+void updateMotion(long forward_distance, long backwards_distance);

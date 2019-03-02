@@ -4,18 +4,18 @@
 
 #define HMC6343_ADDRESS       0x19
 #define HMC6343_HEADING_REG   0x50
-#define POLL_INTERVAL 500
+#define COMPASS_POLL_INTERVAL 500
 
-unsigned long next_poll = 0;
-CompassData cached_data;
+unsigned long compass_next_poll = 0;
+CompassData compass_data;
 
 void setupCompass() {
     Wire.begin();
 }
 
 CompassData readCompass() {
-  if (millis() < next_poll) {
-     return cached_data;
+  if (millis() < compass_next_poll) {
+     return compass_data;
   }
 
   byte highByte, lowByte;
@@ -40,13 +40,13 @@ CompassData readCompass() {
   lowByte = Wire.read();
   float roll = ((highByte << 8) + lowByte) / 10.0;
 
-  next_poll = millis() + POLL_INTERVAL;
+  compass_next_poll = millis() + COMPASS_POLL_INTERVAL;
 
-  cached_data = CompassData {
+  compass_data = CompassData {
     .heading = heading,
     .pitch = pitch,
     .roll = roll,
   };
 
-  return cached_data;
+  return compass_data;
 }

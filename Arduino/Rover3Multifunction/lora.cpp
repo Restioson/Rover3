@@ -32,7 +32,7 @@ bool readLoRa(uint8_t buf[], uint8_t len) {
   return false;
 }
 
-char readCommand() {
+char readRemoteCommand() {
   if (readLoRa(buf, LORA_PACKET_SIZE)) {
     return (char)buf[0];
   } else {

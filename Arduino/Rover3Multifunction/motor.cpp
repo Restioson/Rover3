@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "motor.h"
+#include "sound.h"
 
 #define BRAKEVCC             0
 #define CW                   1
@@ -189,4 +190,53 @@ void pivotRight(int power) {
 
   motorGo(0, CW, power);
   motorGo(1, CCW, power);
+}
+
+void updateMotion(long forward_distance, long backwards_distance) {
+  if ((forward_distance <= DISTANCE_STOP) && (speed == 0)) {
+    Serial.println("Object closer than 40cm!");
+    Serial.print("Speed: "); Serial.print(speed);
+    Serial.print(" Range: "); Serial.println(forward_distance);;
+    note(NOTE_B3, 10);
+  }
+
+  if (direction == FORWARDS) {
+    if ((forward_distance <= DISTANCE_STOP) && (!range_override)) {
+      Serial.println("Too close, forward obstacle - STOPPING!");
+      Serial.print("Speed: "); Serial.print(speed);
+      Serial.print(" Range: "); Serial.println(forward_distance);
+      stopMotors();
+      note(NOTE_G3, 10);
+    } else if ((forward_distance >= DISTANCE_SLOWDOWN) && (speed < 255) && (direction == FORWARDS)) {
+      speed = SPEED_FORWARD;
+      Serial.println("No forward obstacles - SPEEDING UP!");
+      Serial.print("Speed: "); Serial.print(speed);
+      Serial.print(" Range: "); Serial.println(forward_distance);
+      goForward(speed);
+      note(NOTE_A3, 10);
+    } else if ((forward_distance > DISTANCE_STOP) && (forward_distance < DISTANCE_SLOWDOWN) && (speed > SPEED_SLOW)) {
+      speed = SPEED_SLOW;
+      Serial.println("Close to forward obstacle - slowing down!");
+      Serial.print("Speed: "); Serial.print(speed);
+      Serial.print(" Range: "); Serial.println(forward_distance);
+      goForward(speed);
+      note(NOTE_C3, 10);
+    }
+  } else if (direction == BACKWARDS) {
+    if ((speed > 0) && (backwards_distance < DISTANCE_STOP) && (!range_override)) {
+      Serial.println("Too close, rear obstacle - STOPPING!");
+      Serial.print("Speed: "); Serial.print(speed);
+      Serial.print(" Range: "); Serial.println(backwards_distance);
+      note(NOTE_G3, 10);
+      stopMotors();
+    }
+
+    if ((speed > SPEED_SLOW) && (backwards_distance >= DISTANCE_STOP) && (backwards_distance < DISTANCE_SLOWDOWN)) {
+      Serial.println("Close to rear obstacle - slowing down!");
+      Serial.print("Speed: "); Serial.print(speed);
+      Serial.print(" Range: "); Serial.println(backwards_distance);
+      note(NOTE_C3, 10);
+      goBack(SPEED_SLOW);
+    }
+  }
 }
